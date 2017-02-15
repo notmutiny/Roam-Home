@@ -46,9 +46,31 @@ RoamHome={
         "Grand Topal Hideaway",
         "Earthtear Cavern",
     },
+    colors={ 			
+        default="|c641E16",
+
+		red="|cff0000", 	
+		green="|c00ff00",
+		blue="|c0000ff",
+		
+		cyan="|c00ffff",
+		magenta="c|ff00ff",
+		yellow="|cffff00",
+		
+		orange="|cffa700",
+		purple="|c8800aa",
+		pink="|cffaabb",
+		brown="|c554400",
+		
+		white="|cffffff",
+		black="|c000000",
+		gray="|c888888"
+	},       
+    curColor="",
     string=true,
  	defaultPersistentSettings={
         primaryhome="",
+		color="defalt",
         showstring=true,
 		guildacc=nil
 	},
@@ -61,6 +83,7 @@ local roam = RoamHome
 -- Initialize --
 function RoamHome:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("RoamHomeVars",self.ver,nil,self.defaultPersistentSettings)
+	self.curColor=self.persistentSettings.color
     self.guild=self.persistentSettings.guildacc
     self.string=self.persistentSettings.showstring
     self:CreateSettings()
@@ -82,11 +105,11 @@ function roam:GuildHouse(who)
     if (who and who~="") then
         self.guild=who
         self.persistentSettings.guildacc=self.guild
-        d("Saved! Now you can just use /guild to jump") end
+        self:Chat("Saved! Now you can just use /guild to jump") end
     if (self.guild~=nil) then
         if self.string then d("Traveling to guild house owned by "..self.guild) end
         JumpToHouse(self.guild)
-    else d("Please enter the house owners name after /guild") d("Remember @ if account name (eg /guild @name)") end
+    else self:Chat("Please enter the house owners name after /guild") self:Chat("Remember @ if account name (eg /guild @name)") end
 end
 
 function roam:JumpHome(id)
@@ -94,20 +117,24 @@ function roam:JumpHome(id)
     local totalhouses,location,alliance,sall=TableLength(roam.houses),GetCurrentZoneHouseId(),tonumber(GetUnitAlliance("player")),""
     if (id=="") then
         if (self.primary~=location) then
-            if self.string then d("Traveling to primary home "..roam.houses[self.primary]) end
+            if self.string then self:Chat("Traveling to primary home "..roam.houses[self.primary]) end
             RequestJumpToHouse(self.primary)
         else
             if alliance==1 then sall=roam.houses[1] RequestJumpToHouse(1)
             elseif alliance==2 then sall=roam.houses[3] RequestJumpToHouse(3)
             elseif alliance==3 then sall=roam.houses[2] RequestJumpToHouse(2) end
-            if self.string then d("Traveling to room at "..sall) end end
+            if self.string then self:Chat("Traveling to room at "..sall) end end
     else
         local numid = tonumber(id)
             if (numid<=totalhouses) then
                 if self.string then d("Traveling to "..roam.houses[numid]) end
                 RequestJumpToHouse(numid)
-            else d("Could not find house ID to jump to") end
+            else self:Chat("Could not find house ID to jump to") end
     end
+end
+
+function roam:Chat(msg)
+    d(self.colors[self.curColor]..msg.."|r")
 end
 
 function roam:DisableStrings(value)
@@ -123,7 +150,7 @@ function RoamHome:CreateSettings()
     local panelData = {
 	    type = "panel",
 	    name = "Roam Home",
-	    displayName = ZO_HIGHLIGHT_TEXT:Colorize("Roam Home"),
+	    displayName = "|c641E16Roam |cC0392BHome|r",
 	    author = "mutiny",
         version = tostring(self.ver),
 		registerForDefaults = true,
