@@ -1,6 +1,6 @@
 -- Global table --
 RoamHome={
-    ver=0.3,
+    ver=0.4,
     primary="",
     guild=nil,
     houses={  -- "now this is what i'd call data-driven" ;)
@@ -110,7 +110,7 @@ function roam:GuildHouse(who)
         self.persistentSettings.guildacc=self.guild
         self:Chat("Saved! Now you can just use /guild to jump") end
     if (self.guild~=nil) then
-        if self.string then d("Traveling to guild house owned by "..self.guild) end
+        if self.string then self:Chat("Traveling to guild house owned by "..self.guild) end
         JumpToHouse(self.guild)
     else self:Chat("Please enter the house owners name after /guild") self:Chat("Remember @ if account name (eg /guild @name)") end
 end
@@ -141,10 +141,10 @@ function roam:Chat(msg)
     d(self.colorh..msg.."|r")
 end
 
+-- Settings functions --
 function roam:DisableStrings(value)
     self.string=not self.string
     self.persistentSettings.showstring=self.string
-    d(self.string)
 end
 
 function roam:ChangeStringColor(value)
@@ -153,7 +153,6 @@ function roam:ChangeStringColor(value)
     self.colorh=self.colors[value]
     self.persistentSettings.colorhex=self.colorh
 end
-
 
 -- Settings --
 function RoamHome:CreateSettings()
@@ -193,9 +192,9 @@ function RoamHome:CreateSettings()
             },
          [4] = {
             type = "header",
-            name = "Friends",
+            name = "Friends Settings -- coming soon",
             width = "full",
-         },
+            },
     }
     LAM:RegisterOptionControls("RoamHome", optionsData)
 	LAM:RegisterAddonPanel("RoamHome", panelData)
@@ -206,7 +205,6 @@ SLASH_COMMANDS["/guild"]=function(who) roam:GuildHouse(who) end
 SLASH_COMMANDS["/home"]=function(id) roam:JumpHome(id) end
 
 SLASH_COMMANDS["/guildpurge"]=function() roam.guild=nil roam.persistentSettings.guildacc=roam.guild end -- for fast debug
-SLASH_COMMANDS["/homeD"]=function() d("self.primary "..tostring(roam.primary).."  - self.guild "..tostring(roam.guild)) end -- for fast debug
-SLASH_COMMANDS["/table"]=function() d(TableLength(roam.houses)) end
+SLASH_COMMANDS["/homedebug"]=function() d("self.primary "..tostring(roam.primary).."  - self.guild "..tostring(roam.guild)) end -- for fast debug
 
 EVENT_MANAGER:RegisterForEvent("RoamHome_OnLoaded",EVENT_ADD_ON_LOADED,function() roam:Initialize() end)
