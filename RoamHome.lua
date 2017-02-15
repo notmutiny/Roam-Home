@@ -47,7 +47,7 @@ RoamHome={
         "Earthtear Cavern",
     },
     colors={ 			
-        default="|c641E16",
+        default="|cC0392B",
 
 		red="|cff0000", 	
 		green="|c00ff00",
@@ -66,11 +66,13 @@ RoamHome={
 		black="|c000000",
 		gray="|c888888"
 	},       
-    curColor="",
+    colorn="",
+    colorh="",
     string=true,
  	defaultPersistentSettings={
         primaryhome="",
-		color="defalt",
+		colorname="default",
+        colorhex="|cC0392B",
         showstring=true,
 		guildacc=nil
 	},
@@ -83,7 +85,8 @@ local roam = RoamHome
 -- Initialize --
 function RoamHome:Initialize()
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("RoamHomeVars",self.ver,nil,self.defaultPersistentSettings)
-	self.curColor=self.persistentSettings.color
+	self.colorn=self.persistentSettings.colorname
+    self.colorh=self.persistentSettings.colorhex 
     self.guild=self.persistentSettings.guildacc
     self.string=self.persistentSettings.showstring
     self:CreateSettings()
@@ -129,12 +132,13 @@ function roam:JumpHome(id)
             if (numid<=totalhouses) then
                 if self.string then d("Traveling to "..roam.houses[numid]) end
                 RequestJumpToHouse(numid)
-            else self:Chat("Could not find house ID to jump to") end
+            else self:Chat("Could not find house ID to jump to")
+        end
     end
 end
 
 function roam:Chat(msg)
-    d(self.colors[self.curColor]..msg.."|r")
+    d(self.colorh..msg.."|r")
 end
 
 function roam:DisableStrings(value)
@@ -142,6 +146,14 @@ function roam:DisableStrings(value)
     self.persistentSettings.showstring=self.string
     d(self.string)
 end
+
+function roam:ChangeStringColor(value)
+    self.colorn=value
+    self.persistentSettings.colorname=self.colorn
+    self.colorh=self.colors[value]
+    self.persistentSettings.colorhex=self.colorh
+end
+
 
 -- Settings --
 function RoamHome:CreateSettings()
@@ -174,10 +186,10 @@ function RoamHome:CreateSettings()
             type = "dropdown",
             name = "Message color",
             tooltip = "You can choose any color (on this list)",
-            choices = {},
+            choices = {"default","red","green","blue","cyan","magenta","yellow","orange","purple","pink","brown","white","black","gray",},
             width = "half",
-            getFunc = function() return self.string end,
-            setFunc = function(value) roam:DisableStrings(value) end,
+            getFunc = function() return self.colorn end,
+            setFunc = function(value) roam:ChangeStringColor(value) end,
             },
          [4] = {
             type = "header",
