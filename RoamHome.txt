@@ -1,0 +1,18 @@
+## Title: |cff0000Roam |ccfffffHome|r
+## Description: alpha build pls check for updates on esoui
+## Version: 0
+## Author: mutiny
+## APIVersion: 100018
+## SavedVariables: RoamHomeVars
+
+RoamHome.lua
+
+## DISCLAIMER:
+##
+## This Add-on is not created by, affiliated with or sponsored by ZeniMax
+## Media Inc. or its affiliates. The Elder Scrolls® and related logos are
+## registered trademarks or trademarks of ZeniMax Media Inc. in the United
+## States and/or other countries. All rights reserved.
+##
+## You can read the full terms at:
+## https://account.elderscrollsonline.com/add-on-terms
