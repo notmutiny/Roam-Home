@@ -5,6 +5,6 @@ This is a barebones ALPHA release so not many features yet. I will be adding mor
 
 # How to use
 
-/guild to travel to saved guild house (/guild will help you add one if one is not registered)
-
 /home to travel to primary house (and between free apartment)
+
+/guild to travel to saved guild house (/guild will help you add one if one is not registered)
