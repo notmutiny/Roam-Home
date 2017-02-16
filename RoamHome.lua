@@ -1,6 +1,6 @@
 -- Global table --
 RoamHome={
-    ver=0.4,
+    ver=0.6,
     primary="",
     guild=nil,
     friend=nil,
@@ -193,6 +193,18 @@ function roam:ChangeStringColor(value)
     self.persistentSettings.colorhex=self.colorh
 end
 
+function roam:SaveFriendHouse(value)
+    self.friend=value
+    self.persistentSettings.friendacc=self.friend
+    d(self.friend)
+end
+
+function roam:SaveGuildHouse(value)
+    self.guild=value
+    self.persistentSettings.guildacc=self.guild
+    d(self.guild)
+end
+
 -- Settings --
 function RoamHome:CreateSettings()
     GetFriendsList()
@@ -210,7 +222,7 @@ function RoamHome:CreateSettings()
     local optionsData = {  
          [1] = {
             type = "header",
-            name = "Display settings",
+            name = "|cC0392BDisplay settings|r",
             width = "full",
             },
          [2] = {
@@ -232,18 +244,42 @@ function RoamHome:CreateSettings()
             },
          [4] = {
             type = "header",
-            name = "Friends Settings -- coming soon",
+            name = "|cC0392BHouse settings|r",
             width = "full",
             },
          [5] = {
-            type = "dropdown",
-            name = "Friends list",
-            tooltip = "You can choose any color (on this list)",
-            choices = myFriendsOptions,
-            width = "half",
-            getFunc = function() return end,
-            setFunc = function(value) end,
+            type = "submenu",
+            name = "Friends saved homes (/friend)",
+            tooltip = "Save friends houses to jump to",
+            width = "full",
+            controls= {
+            [1] = {
+                type = "dropdown",
+                name = "House owner",
+                tooltip = "",
+                choices = myFriendsOptions,
+                width = "full",
+                getFunc = function() return self.friend end,
+                setFunc = function(value) roam:SaveFriendHouse(value) end,
+                },
             },
+        },
+        [6] = {
+            type = "submenu",
+            name = "Guild saved homes (/guild)",
+            tooltip = "Save guild houses to jump to",
+            width = "full",
+            controls= {
+            [1] = {
+                type = "editbox",
+                name = "House owner",
+                tooltip = "",
+                isMultiline = false,
+                getFunc = function() return self.guild end,
+                setFunc = function(value) roam:SaveGuildHouse(value) end,
+                },
+            },
+        },   
     }
     LAM:RegisterOptionControls("RoamHome", optionsData)
 	LAM:RegisterAddonPanel("RoamHome", panelData)
@@ -253,7 +289,6 @@ end
 SLASH_COMMANDS["/guild"]=function(who) roam:GuildHouse(who) end
 SLASH_COMMANDS["/friend"]=function(who) roam:FriendHouse(who) end
 SLASH_COMMANDS["/home"]=function(id) roam:JumpHome(id) end
-SLASH_COMMANDS["/f"]=function(id) testfriends() end
 
 
 SLASH_COMMANDS["/guildpurge"]=function() roam.guild=nil roam.persistentSettings.guildacc=roam.guild end -- for fast debug
