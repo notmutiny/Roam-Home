@@ -3,6 +3,7 @@ RoamHome={
     ver=0.4,
     primary="",
     guild=nil,
+    friend=nil,
     houses={  -- "now this is what i'd call data-driven" ;)
         "Mara's Kiss Public House",
         "The Rosy Lion",
@@ -74,7 +75,8 @@ RoamHome={
 		colorname="default",
         colorhex="|cC0392B",
         showstring=true,
-		guildacc=nil
+		guildacc=nil,
+        friendacc=nil
 	},
 	persistentSettings={
     }
@@ -88,9 +90,10 @@ function RoamHome:Initialize()
 	self.colorn=self.persistentSettings.colorname
     self.colorh=self.persistentSettings.colorhex 
     self.guild=self.persistentSettings.guildacc
+    self.friend=self.persistentSettings.friendacc
     self.string=self.persistentSettings.showstring
     self:CreateSettings()
-    ZO_CreateStringId("SI_BINDING_NAME_ROAMHOME", "JumpHome")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_HOME","Jump home")
 	EVENT_MANAGER:UnregisterForEvent("RoamHome_OnLoaded",EVENT_ADD_ON_LOADED)
 end
 
@@ -103,6 +106,27 @@ local function TableLength(tab)
     return Result
 end
 
+local myFriendsOptions = {}
+
+function GetFriendsList()
+    local f=GetNumFriends()
+    for i=1,f do -- loops through friends 
+        table.insert(myFriendsOptions, tostring(GetFriendInfo(i)))
+    end
+end
+
+--[[function PrintFriends()
+    local f=GetNumFriends()
+    for i=1,f do
+        d(myFriendsOptions[i])
+    end
+end
+
+function testfriends()
+    GetFriendsList()
+    PrintFriends()
+end]]--
+
 -- Addon functions --
 function roam:GuildHouse(who)
     if (who and who~="") then
@@ -110,15 +134,26 @@ function roam:GuildHouse(who)
         self.persistentSettings.guildacc=self.guild
         self:Chat("Saved! Now you can just use /guild to jump") end
     if (self.guild~=nil) then
-        if self.string then self:Chat("Traveling to guild house owned by "..self.guild) end
+        if self.string then self:Chat("Traveling to guild home owned by "..self.guild) end
         JumpToHouse(self.guild)
-    else self:Chat("Please enter the house owners name after /guild") self:Chat("Remember @ if account name (eg /guild @name)") end
+    else self:Chat("Please enter the home owners name after /guild") self:Chat("Remember @ if account name (eg /guild @name)") end
+end
+
+function roam:FriendHouse(who)
+    if (who and who~="") then
+        self.friend=who
+        self.persistentSettings.friendacc=self.friend
+        self:Chat("Saved! Now you can just use /friend to jump") end
+    if (self.friend~=nil) then
+        if self.string then self:Chat("Traveling to "..self.friend.."'s primary home") end
+        JumpToHouse(self.friend)
+    else self:Chat("Please enter the home owners name after /friend") self:Chat("Remember @ if account name (eg /friend @name)") end
 end
 
 function roam:JumpHome(id)
     self.primary=GetHousingPrimaryHouse()
     local totalhouses,location,alliance,sall=TableLength(roam.houses),GetCurrentZoneHouseId(),tonumber(GetUnitAlliance("player")),""
-    if (id=="") then
+    if (not id or id=="") then
         if (self.primary~=location) then
             if self.string then self:Chat("Traveling to primary home "..roam.houses[self.primary]) end
             RequestJumpToHouse(self.primary)
@@ -142,6 +177,10 @@ function roam:Chat(msg)
 end
 
 -- Settings functions --
+function RoamHome_JumpHome()
+    roam:JumpHome()
+end
+
 function roam:DisableStrings(value)
     self.string=not self.string
     self.persistentSettings.showstring=self.string
@@ -156,6 +195,7 @@ end
 
 -- Settings --
 function RoamHome:CreateSettings()
+    GetFriendsList()
     local LAM=LibStub("LibAddonMenu-2.0")
     local defaultSettings={}
     local panelData = {
@@ -195,6 +235,15 @@ function RoamHome:CreateSettings()
             name = "Friends Settings -- coming soon",
             width = "full",
             },
+         [5] = {
+            type = "dropdown",
+            name = "Friends list",
+            tooltip = "You can choose any color (on this list)",
+            choices = myFriendsOptions,
+            width = "half",
+            getFunc = function() return end,
+            setFunc = function(value) end,
+            },
     }
     LAM:RegisterOptionControls("RoamHome", optionsData)
 	LAM:RegisterAddonPanel("RoamHome", panelData)
@@ -202,7 +251,10 @@ end
 
 -- Game hooks --
 SLASH_COMMANDS["/guild"]=function(who) roam:GuildHouse(who) end
+SLASH_COMMANDS["/friend"]=function(who) roam:FriendHouse(who) end
 SLASH_COMMANDS["/home"]=function(id) roam:JumpHome(id) end
+SLASH_COMMANDS["/f"]=function(id) testfriends() end
+
 
 SLASH_COMMANDS["/guildpurge"]=function() roam.guild=nil roam.persistentSettings.guildacc=roam.guild end -- for fast debug
 SLASH_COMMANDS["/homedebug"]=function() d("self.primary "..tostring(roam.primary).."  - self.guild "..tostring(roam.guild)) end -- for fast debug
