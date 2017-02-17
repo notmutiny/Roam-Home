@@ -1,6 +1,6 @@
 -- Global table --
 RoamHome={
-    ver=0.8,
+    ver=0.6,
     debug=nil,
     primary=nil,
     primaryz="",
@@ -266,6 +266,7 @@ function RoamHome:SaveCustomLocation(value)
     self.persistentSettings.pdisplay=self.pdisplay
     self.persistentSettings.savedhousestrings=self.savedhousestrings
     self.persistentSettings.savedhouseids=self.savedhouseids
+    ReloadUI()
 end
 
 function RoamHome:SaveHomeName(value, id)
@@ -297,7 +298,10 @@ function RoamHome:CommandSettings(value, who)
         self.persistentSettings.fstring=self.fstring
     elseif (who=="guild") then
         self.gstring=value
-        self.persistentSettings.gstring=self.gstring end
+        self.persistentSettings.gstring=self.gstring
+    elseif (who=="home") then
+        self.hstring=value
+        self.persistentSettings.hstring=self.hstring end
     if self.debug then self:Chat("Roam Home changed "..who.." command to "..value) end
 end
 
@@ -367,6 +371,15 @@ function RoamHome:CreateSettings()
             },
          [5] = {
             type = "dropdown",
+            name = "Slash commands",
+            tooltip = "",
+            choices = {"/home","/roam"},
+            width = "full",
+            getFunc = function() return self.hstring end,
+            setFunc = function(value) self:StringSettings(value, "home") end,
+            },
+         [6] = {
+            type = "dropdown",
             name = "Primary home",
             tooltip = "Select home to travel to with /home",
             width = "half",
@@ -374,15 +387,15 @@ function RoamHome:CreateSettings()
             getFunc = function() return self.pdisplay end,
             setFunc = function(value) self:SaveHome(value, "1") end,
             },
-         [6] = {
+         [7] = {
             type = "editbox",
             name = "Save name",
-            tooltip = "Save a name to access it later",
+            tooltip = "Save a name to access this home later",
             width = "half",
             getFunc = function() return end,
             setFunc = function(value) self:SaveCustomLocation(value, "1") end,
             },
-         [7] = {
+         [8] = {
             type = "dropdown",
             name = "Secondary home",
             tooltip = "Select home to travel to with /home",
@@ -391,15 +404,15 @@ function RoamHome:CreateSettings()
             getFunc = function() return self.sdisplay end,
             setFunc = function(value) self:SaveHome(value, "2") end,
             },
-         [8] = {
+         [9] = {
             type = "editbox",
             name = "Save name",
-            tooltip = "Save a name to access it later",
+            tooltip = "Save a name to access this home later",
             width = "half",
             getFunc = function() return end,
             setFunc = function(value) end,
             },
-         [9] = {
+         [10] = {
             type = "submenu",
             name = "Friends saved homes",
             tooltip = "",
@@ -453,7 +466,7 @@ function RoamHome:CreateSettings()
                     },
             },
         },
-         [10] = {  -- start guild dropdown
+         [11] = {  -- start guild dropdown
             type = "submenu",
             name = "Guild saved homes",
             tooltip = "",
