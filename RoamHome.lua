@@ -158,17 +158,38 @@ function roam:JumpHome(id)
             if (numid<=totalhouses) then
                 self:Chat("Traveling to "..self.stringlist.homes[numid])
                 RequestJumpToHouse(numid)
-            else self:Chat("Could not find house ID to jump to") end
+            else self:Chat("Could not find house ID to jump to")
+        end
     end
 end
 
+function roam:JumpAccountHome(id, who)
+    if (who=="friend") then
+        if (id=="" or id=="1") then
+            self:Chat("Traveling to home owned by "..self.friend)
+            JumpToHouse(self.friend)
+        elseif (id=="2") then
+            self:Chat("Traveling to home owned by "..self.friend2)
+            JumpToHouse(self.friend2) end
+    elseif (who=="guild") then
+        if (id=="" or id=="1") then
+            self:Chat("Traveling to home owned by "..self.guild)
+            JumpToHouse(self.guild)
+        elseif (id=="2") then
+            self:Chat("Traveling to home owned by "..self.guild2)
+            JumpToHouse(self.guild2) end
+    else self:Chat("Roam Home 0.7 currently only supports 1 or 2") end
+end
+
 function RoamHome:FindApartment(arg)
-    if (self.secondary==nil or arg=="force") then
-        local alliance=tonumber(GetUnitAlliance("player"))
-        if alliance==1 then roam.secondary=1 end
-        if alliance==2 then roam.secondary=3 end
-        if alliance==3 then roam.secondary=2 end
-    else self:Chat("findapartment() could not save") end
+--  if (self.secondary==nil or arg=="force") then DISABLED FOR 0.7
+    local alliance=tonumber(GetUnitAlliance("player"))
+    if alliance==1 then roam.secondary=1 end
+    if alliance==2 then roam.secondary=3 end
+    if alliance==3 then roam.secondary=2 end
+    roam.sdisplay="default"
+    roam.persistentSettings.sdisplay=roam.sdisplay
+--  else self:Chat("findapartment() could not save") end
     if self.debug then self:Chat("Roam Home set secondary home to "..self.secondary) end
 end
 
@@ -247,6 +268,10 @@ function RoamHome:HouseSettings(value, who)
     if self.debug then self:Chat("Roam Home changed "..who.." to "..value) end
 end
 
+function RoamHome_JumpHome()
+    roam:JumpHome()
+end
+
 -- Settings --
 function RoamHome:CreateSettings()
     GetFriendsList()
@@ -292,18 +317,18 @@ function RoamHome:CreateSettings()
          [5] = {
             type = "editbox",
             name = "Primary home",
-            tooltip = "Type default for your primary house or use @accountname",
+            tooltip = "Type default for your primary house or use @accountname -- DISABLED FOR 0.7 am soz",
             width = "half",
             getFunc = function() return self.pdisplay end,
-            setFunc = function(value) self:SaveHome1(value) end,
+            setFunc = function(value) end,
             },
          [6] = {
             type = "editbox",
             name = "Secondary home",
-            tooltip = "Type default for your free apartment or type @accountname",
+            tooltip = "Type default for your free apartment or type @accountname -- DISABLED FOR 0.7 am soz",
             width = "half",
             getFunc = function() return self.sdisplay end,
-            setFunc = function(value) self:SaveHome2(value) end,
+            setFunc = function(value) end,
             },
          [7] = {
             type = "submenu",
@@ -314,7 +339,7 @@ function RoamHome:CreateSettings()
                [1] = { -- starts friends menu --
                     type = "dropdown",
                     name = "Slash commands",
-                    tooltip = "",
+                    tooltip = "DISABLED FOR 0.7 am soz",
                     choices = {"/friend","/roamf","/homef"},
                     width = "full",
                     getFunc = function() return self.fstring end,
@@ -323,7 +348,7 @@ function RoamHome:CreateSettings()
                [2] = {
                     type = "dropdown",
                     name = "Primary",
-                    tooltip = "",
+                    tooltip = "/friend",
                     choices = myFriendsOptions,
                     width = "half",
                     getFunc = function() return self.friend end,
@@ -332,7 +357,7 @@ function RoamHome:CreateSettings()
                [3] = {
                     type = "dropdown",
                     name = "Secondary",
-                    tooltip = "",
+                    tooltip = "/friend 2",
                     choices = myFriendsOptions,
                     width = "half",
                     getFunc = function() return self.friend2 end,
@@ -368,7 +393,7 @@ function RoamHome:CreateSettings()
                [1] = {
                     type = "dropdown",
                     name = "Slash commands",
-                    tooltip = "",
+                    tooltip = "DISABLED FOR 0.7 am soz",
                     choices = {"/guild","/roamg","/homeg"},
                     width = "full",
                     getFunc = function() return self.gstring end,
@@ -377,7 +402,7 @@ function RoamHome:CreateSettings()
                [2] = {
                     type = "editbox",
                     name = "Primary",
-                    tooltip = "",
+                    tooltip = "/guild",
                     width = "half",
                     getFunc = function() return self.guild end,
                     setFunc = function(value) self:HouseSettings(value, "guild") end,
@@ -385,7 +410,7 @@ function RoamHome:CreateSettings()
                [3] = {
                     type = "editbox",
                     name = "Secondary",
-                    tooltip = "",
+                    tooltip = "/guild 2",
                     width = "half",
                     getFunc = function() return self.guild2 end,
                     setFunc = function(value) self:HouseSettings(value, "guild2") end,
@@ -418,7 +443,8 @@ end
 
 -- Game hooks --
 SLASH_COMMANDS["/home"]=function(id) roam:JumpHome() end
-SLASH_COMMANDS["/string"]=function(id) d(tostring(roam.string)) end -- ?
+SLASH_COMMANDS["/friend"]=function(id) roam:JumpAccountHome(id,"friend") end
+SLASH_COMMANDS["/guild"]=function(id) roam:JumpAccountHome(id,"guild") end
 SLASH_COMMANDS["/homedebug"]=function(id) roam.debug=not roam.debug roam:Chat("Roam Home debug: "..tostring(roam.debug)) roam.persistentSettings.debug=roam.debug end
 
 
