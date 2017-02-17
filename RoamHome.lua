@@ -1,8 +1,9 @@
 -- Global table --
 RoamHome={
-    ver=0.8,
+    ver=0.7,
     debug=nil,
     primary=nil,
+    primaryz="",
     secondary=nil,
     string=nil,
     color="",
@@ -16,6 +17,8 @@ RoamHome={
     hstring="",
     pdisplay="",
     sdisplay="",
+    savedhousestrings={"Default home","Current location"},
+    savedhouseids={"",""},
     defaultPersistentSettings={
         debug=false,
         primary=GetHousingPrimaryHouse(),
@@ -30,8 +33,9 @@ RoamHome={
         guild2="",
         gstring="/guild",
         hstring="/home",
-        pdisplay="default",
-        sdisplay="default",
+        pdisplay="Default home",
+        sdisplay="Default home",
+        savedhousestrings={"Default home","Current location"},
     },
 	persistentSettings={ },
     stringlist={
@@ -118,6 +122,7 @@ function RoamHome:Initialize() -- holy hell I need to shorten this
     self.guild2=self.persistentSettings.guild2
     self.gstring=self.persistentSettings.gstring
     self.hstring=self.persistentSettings.hstring
+    self.savedhousestrings=self.persistentSettings.savedhousestrings
     self:CreateSettings() -- creates settings VERY DELICATE do NOT derp inside function
     ZO_CreateStringId("SI_BINDING_NAME_JUMP_HOME","Jump home")
 	EVENT_MANAGER:UnregisterForEvent("RoamHome_OnLoaded",EVENT_ADD_ON_LOADED)
@@ -148,12 +153,12 @@ end
 -- Addon --
 function roam:JumpHome(id)
     local totalhouses,location=TableLength(self.stringlist.homes),GetCurrentZoneHouseId()
-    if (not id or id=="") then -- if where not specified
+    if (id=="") then -- if where not specified
         if (self.primary~=location) then -- we aint home yet nigga
-            self:Chat("Traveling to primary home "..self.stringlist.homes[self.primary])
+            self:Chat("Traveling to primary home ")--..self.stringlist.homes[self.primary])
             RequestJumpToHouse(self.primary) -- now we home
         else
-            self:Chat("Traveling to secondary home "..self.stringlist.homes[self.secondary])
+            self:Chat("Traveling to secondary home ")--..self.stringlist.homes[self.secondary])
             RequestJumpToHouse(self.secondary) end
     else
         local numid = tonumber(id) -- someone specified which house they want to go to
@@ -184,9 +189,7 @@ function roam:JumpAccountHome(id, who)
             end
         else
             self.friend=id
-            self.fstring=self.friend
             self.persistentSettings.friend=self.friend
-            self.persistentSettings.fstring=self.fstring
             self:Chat("Account saved! Now you can just use /friend to jump")
         end
     elseif (who=="guild") then
@@ -207,55 +210,66 @@ function roam:JumpAccountHome(id, who)
             end
         else
             self.guild=id
-            self.gstring=self.guild
             self.persistentSettings.guild=self.guild
-            self.persistentSettings.gstring=self.gstring
             self:Chat("Account saved! Now you can just use /guild to jump")
         end
     end
 end
 
 function RoamHome:FindApartment(arg)
---  if (self.secondary==nil or arg=="force") then DISABLED FOR 0.7
-    local alliance=tonumber(GetUnitAlliance("player"))
-    if alliance==1 then roam.secondary=1 end
-    if alliance==2 then roam.secondary=3 end
-    if alliance==3 then roam.secondary=2 end
-    roam.sdisplay="default"
-    roam.persistentSettings.sdisplay=roam.sdisplay
---  else self:Chat("findapartment() could not save") end
+    if (self.secondary==nil or arg=="force") then
+        local alliance=tonumber(GetUnitAlliance("player"))
+        if alliance==1 then roam.secondary=1 end
+        if alliance==2 then roam.secondary=3 end
+        if alliance==3 then roam.secondary=2 end
+        roam.sdisplay="Free apartment"
+        roam.persistentSettings.sdisplay=roam.sdisplay
+    else self:Chat("findapartment() could not save") end
     if self.debug then self:Chat("Roam Home set secondary home to "..self.secondary) end
 end
 
 -- Settings functions --
-function RoamHome:SaveHome1(value)
-    if (value=="default") then
-        self.primary=GetHousingPrimaryHouse()
-        self.persistentSettings.primary=self.primary
-        self.pdisplay="default"
-        self.persistentSettings.pdisplay=self.pdisplay
-        if self.debug then self:Chat("Roam Home set primary home to "..self.primary.." & display to "..self.pdisplay) end
+function RoamHome:SaveHome(value, id)
+    if (value=="Current location") then
+        if (id=="1") then
+            self.primary=GetCurrentZoneHouseId()
+            self.persistentSettings.primary=self.primary
+            self.pdisplay=self.stringlist.homes[self.primary]
+            self.persistentSettings.pdisplay=self.pdisplay
+            if self.debug then self:Chat("Roam Home set primary home to "..self.primary.." & display to "..self.pdisplay) end
+        elseif (id=="2") then
+            self.secondary=GetCurrentZoneHouseId()
+            self.persistentSettings.secondary=self.secondary
+            self.sdisplay=self.stringlist.homes[self.secondary]
+            self.persistentSettings.sdisplay=self.sdisplay
+            if self.debug then self:Chat("Roam Home set secondary home to "..self.secondary.." & display to "..self.sdisplay) end
+        end
     else
-        self.primary=value
-        self.persistentSettings.primary=self.primary
-        self.pdisplay=self.primary
-        self.persistentSettings.pdisplay=self.pdisplay
-        if self.debug then self:Chat("Roam Home set primary home to "..self.primary.." & display to "..self.pdisplay) end
+        if (id=="1") then
+            self.primary=GetHousingPrimaryHouse()
+            self.persistentSettings.primary=self.primary
+            self.pdisplay="Primary home"
+            self.persistentSettings.pdisplay=self.pdisplay
+        elseif (id=="2") then
+            self:FindApartment("force")
+            self.sdisplay="Free apartment"
+            self.persistentSettings.sdisplay=self.sdisplay
+        end
     end
 end
 
-function RoamHome:SaveHome2(value)
-    if (value=="default") then    
-        self.FindApartment("force")
-        self.sdisplay="default"
-        self.persistentSettings.sdisplay=self.sdisplay
-        if self.debug then self:Chat("Roam Home forced FindApartment() & display set to "..self.sdisplay) end
-    else
-        self.secondary=value
-        self.persistentSettings.secondary=self.secondary
-        self.sdisplay=self.secondary
-        self.persistentSettings.sdisplay=self.sdisplay
-        if self.debug then self:Chat("Roam Home set secondary home to "..self.secondary.." & display set to "..self.sdisplay) end
+function RoamHome:SaveCustomLocation(value)
+    table.insert(self.savedhousestrings, value)
+    table.insert(self.savedhouseids, GetCurrentZoneHouseId())
+    self.persistentSettings.savedhousestrings=self.savedhousestrings
+    self.persistentSettings.savedhouseids=self.savedhouseids
+end
+
+function RoamHome:SaveHomeName(value, id)
+    if (id=="1") then
+        table.insert(self.savedhousestrings, value)
+        d("inserted "..value.." into table")
+        self.persistentSettings.savedhousestrings=self.savedhousestrings
     end
 end
 
@@ -344,27 +358,45 @@ function RoamHome:CreateSettings()
             setFunc = function(value) self:StringSettings(value) end,
             },
          [4] = {
-            type = "header",
+            type = "header", -- START HOME SETTINGS --
             name = "|cC0392BHouse|r settings",
             width = "full",
             },
          [5] = {
-            type = "editbox",
+            type = "dropdown",
             name = "Primary home",
-            tooltip = "Type default for your primary house or use @accountname -- DISABLED FOR 0.7 am soz",
+            tooltip = "",
             width = "half",
+            choices = self.savedhousestrings,
             getFunc = function() return self.pdisplay end,
-            setFunc = function(value) end,
+            setFunc = function(value) self:SaveHome(value, "1") end,
             },
          [6] = {
             type = "editbox",
-            name = "Secondary home",
-            tooltip = "Type default for your free apartment or type @accountname -- DISABLED FOR 0.7 am soz",
+            name = "Save name",
+            tooltip = "Input a home to travel to with /guild",
             width = "half",
-            getFunc = function() return self.sdisplay end,
-            setFunc = function(value) end,
+            getFunc = function() return end,
+            setFunc = function(value) self:SaveCustomLocation(value, "1") end,
             },
          [7] = {
+            type = "dropdown",
+            name = "Secondary home",
+            tooltip = "",
+            width = "half",
+            choices = self.savedhousestrings,
+            getFunc = function() return self.sdisplay end,
+            setFunc = function(value) self:SaveHome(value, "2") end,
+            },
+         [8] = {
+            type = "editbox",
+            name = "Save name",
+            tooltip = "Input a home to travel to with /guild",
+            width = "half",
+            getFunc = function() return end,
+            setFunc = function(value) end,
+            },
+         [9] = {
             type = "submenu",
             name = "Friends saved homes",
             tooltip = "",
@@ -418,7 +450,7 @@ function RoamHome:CreateSettings()
                     },
             },
         },
-         [8] = {  -- start guild dropdown
+         [10] = {  -- start guild dropdown
             type = "submenu",
             name = "Guild saved homes",
             tooltip = "",
@@ -456,14 +488,14 @@ function RoamHome:CreateSettings()
                     },
                 [5] = {
                     type = "button",
-                    name = "Add friend",
+                    name = "Add member",
                     tooltip = "Coming soon :)",
                     width = "half",
                     func = function() return end,
                     },
                 [6] = {
                     type = "button",
-                    name = "Remove friend",
+                    name = "Remove member",
                     tooltip = "Coming soon :)",
                     width = "half",
                     func = function() return end,
@@ -476,6 +508,7 @@ function RoamHome:CreateSettings()
 end
 
 -- Game hooks --
+SLASH_COMMANDS["/test"]=function(id) d(TableLength(roam.savedhousestrings)) end
 SLASH_COMMANDS["/home"]=function(id) roam:JumpHome(id) end
 SLASH_COMMANDS["/friend"]=function(id) roam:JumpAccountHome(id,"friend") end
 SLASH_COMMANDS["/guild"]=function(id) roam:JumpAccountHome(id,"guild") end
