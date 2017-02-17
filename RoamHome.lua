@@ -26,6 +26,8 @@ RoamHome={
         friend="",
         friend2="",
         fstring="/friend",
+        guild="",
+        guild2="",
         gstring="/guild",
         hstring="/home",
         pdisplay="default",
@@ -166,19 +168,51 @@ end
 function roam:JumpAccountHome(id, who)
     if (who=="friend") then
         if (id=="" or id=="1") then
-            self:Chat("Traveling to friend home owned by "..self.friend)
-            JumpToHouse(self.friend)
+            if self.friend=="" then
+                self:Chat("Please enter the home owners name after /friend")
+                self:Chat("Remember @ if account name (eg /friend @name)")
+            else
+                self:Chat("Traveling to friend home owned by "..self.friend)
+                JumpToHouse(self.friend)
+            end
         elseif (id=="2") then
-            self:Chat("Traveling to friend home owned by "..self.friend2)
-            JumpToHouse(self.friend2) end
+            if self.friend2=="" then
+                self:Chat("Please set up this command in Roam Home settings")
+            else
+                self:Chat("Traveling to friend home owned by "..self.friend2)
+                JumpToHouse(self.friend2)
+            end
+        else
+            self.friend=id
+            self.fstring=self.friend
+            self.persistentSettings.friend=self.friend
+            self.persistentSettings.fstring=self.fstring
+            self:Chat("Account saved! Now you can just use /friend to jump")
+        end
     elseif (who=="guild") then
         if (id=="" or id=="1") then
-            self:Chat("Traveling to guild home owned by "..self.guild)
-            JumpToHouse(self.guild)
+            if self.guild=="" then
+                self:Chat("Please enter the home owners name after /guild")
+                self:Chat("Remember @ if account name (eg /guild @name)")
+            else
+                self:Chat("Traveling to guild home owned by "..self.guild)
+                JumpToHouse(self.guild)
+            end
         elseif (id=="2") then
-            self:Chat("Traveling to guild home owned by "..self.guild2)
-            JumpToHouse(self.guild2) end
-    else end
+            if self.guild2=="" then
+                self:Chat("Please set up this command in Roam Home settings")
+            else
+                self:Chat("Traveling to guild home owned by "..self.guild2)
+                JumpToHouse(self.guild2)
+            end
+        else
+            self.guild=id
+            self.gstring=self.guild
+            self.persistentSettings.guild=self.guild
+            self.persistentSettings.gstring=self.gstring
+            self:Chat("Account saved! Now you can just use /guild to jump")
+        end
+    end
 end
 
 function RoamHome:FindApartment(arg)
@@ -295,7 +329,7 @@ function RoamHome:CreateSettings()
          [2] = {
             type = "checkbox",
             name = "Show destination in chat window",
-            tooltip = "(default on)",
+            tooltip = "",
             width = "half",
             getFunc = function() return self.string end,
             setFunc = function(value) self:StringSettings(value) end,
@@ -303,7 +337,7 @@ function RoamHome:CreateSettings()
          [3] = {
             type = "dropdown",
             name = "Message color",
-            tooltip = "You can choose any color (on this list)",
+            tooltip = "",
             choices = {"default","red","green","blue","cyan","magenta","yellow","orange","purple","pink","brown","white","black","gray",},
             width = "half",
             getFunc = function() return self.color end,
@@ -333,7 +367,7 @@ function RoamHome:CreateSettings()
          [7] = {
             type = "submenu",
             name = "Friends saved homes",
-            tooltip = "Save friends houses to jump to",
+            tooltip = "",
             width = "full",
             controls= {
                [1] = { -- starts friends menu --
@@ -348,7 +382,7 @@ function RoamHome:CreateSettings()
                [2] = {
                     type = "dropdown",
                     name = "Primary",
-                    tooltip = "/friend",
+                    tooltip = "Select a home to travel to with /friend",
                     choices = myFriendsOptions,
                     width = "half",
                     getFunc = function() return self.friend end,
@@ -357,7 +391,7 @@ function RoamHome:CreateSettings()
                [3] = {
                     type = "dropdown",
                     name = "Secondary",
-                    tooltip = "/friend 2",
+                    tooltip = "Select a home to travel to with /friend 2",
                     choices = myFriendsOptions,
                     width = "half",
                     getFunc = function() return self.friend2 end,
@@ -365,20 +399,20 @@ function RoamHome:CreateSettings()
                     },
                [4] = {
                     type = "header",
-                    name = "Coming soon :)",
+                    name = "",
                     width = "full",           
                     },
                 [5] = {
                     type = "button",
                     name = "Add friend",
-                    tooltip = "hello",
+                    tooltip = "Coming soon :)",
                     width = "half",
                     func = function() return end,
                     },
                 [6] = {
                     type = "button",
                     name = "Remove friend",
-                    tooltip = "hello",
+                    tooltip = "Coming soon :)",
                     width = "half",
                     func = function() return end,
                     },
@@ -387,7 +421,7 @@ function RoamHome:CreateSettings()
          [8] = {  -- start guild dropdown
             type = "submenu",
             name = "Guild saved homes",
-            tooltip = "Save guild homes to jump to",
+            tooltip = "",
             width = "full",
             controls= {
                [1] = {
@@ -402,7 +436,7 @@ function RoamHome:CreateSettings()
                [2] = {
                     type = "editbox",
                     name = "Primary",
-                    tooltip = "/guild",
+                    tooltip = "Input a home to travel to with /guild",
                     width = "half",
                     getFunc = function() return self.guild end,
                     setFunc = function(value) self:HouseSettings(value, "guild") end,
@@ -410,27 +444,27 @@ function RoamHome:CreateSettings()
                [3] = {
                     type = "editbox",
                     name = "Secondary",
-                    tooltip = "/guild 2",
+                    tooltip = "Input a home to travel to with /guild 2",
                     width = "half",
                     getFunc = function() return self.guild2 end,
                     setFunc = function(value) self:HouseSettings(value, "guild2") end,
                     },
                [4] = {
                     type = "header",
-                    name = "Coming soon :)",
+                    name = "",
                     width = "full",           
                     },
                 [5] = {
                     type = "button",
                     name = "Add friend",
-                    tooltip = "hello",
+                    tooltip = "Coming soon :)",
                     width = "half",
                     func = function() return end,
                     },
                 [6] = {
                     type = "button",
                     name = "Remove friend",
-                    tooltip = "hello",
+                    tooltip = "Coming soon :)",
                     width = "half",
                     func = function() return end,
                     },
