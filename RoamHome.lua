@@ -1,6 +1,6 @@
 -- Global table --
 RoamHome={
-    ver=0.7,
+    ver=0.8,
     debug=nil,
     primary=nil,
     secondary=nil,
@@ -28,8 +28,8 @@ RoamHome={
         fstring="/friend",
         gstring="/guild",
         hstring="/home",
-        pdisplay="",
-        sdisplay="",
+        pdisplay="default",
+        sdisplay="default",
     },
 	persistentSettings={ },
     stringlist={
