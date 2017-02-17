@@ -98,14 +98,14 @@ RoamHome={
 local roam = RoamHome
 
 -- Initialize --
-function RoamHome:Initialize()
+function RoamHome:Initialize() -- holy hell I need to shorten this
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("RoamHomeVars",self.ver,nil,self.defaultPersistentSettings)
     self.debug=self.persistentSettings.debug
     self.primary=self.persistentSettings.primary
     self.pdisplay=self.persistentSettings.pdisplay
     self.secondary=self.persistentSettings.secondary
     self.sdisplay=self.persistentSettings.sdisplay
-    self:FindApartment()
+    self:FindApartment() -- mutinys bandaid for determining where default apartment is
     self.string=self.persistentSettings.string
     self.color=self.persistentSettings.color
     self.hex=self.persistentSettings.hex
@@ -116,7 +116,7 @@ function RoamHome:Initialize()
     self.guild2=self.persistentSettings.guild2
     self.gstring=self.persistentSettings.gstring
     self.hstring=self.persistentSettings.hstring
-    self:CreateSettings()
+    self:CreateSettings() -- creates settings VERY DELICATE do NOT derp inside function
     ZO_CreateStringId("SI_BINDING_NAME_JUMP_HOME","Jump home")
 	EVENT_MANAGER:UnregisterForEvent("RoamHome_OnLoaded",EVENT_ADD_ON_LOADED)
 end
@@ -146,17 +146,17 @@ end
 -- Addon --
 function roam:JumpHome(id)
     local totalhouses,location=TableLength(self.stringlist.homes),GetCurrentZoneHouseId()
-    if (not id or id=="") then
-        if (self.primary~=location) then
+    if (not id or id=="") then -- if where not specified
+        if (self.primary~=location) then -- we aint home yet nigga
             self:Chat("Traveling to primary home "..self.stringlist.homes[self.primary])
-            RequestJumpToHouse(self.primary)
+            RequestJumpToHouse(self.primary) -- now we home
         else
             self:Chat("Traveling to secondary home "..self.stringlist.homes[self.secondary])
             RequestJumpToHouse(self.secondary) end
     else
-        local numid = tonumber(id)
+        local numid = tonumber(id) -- someone specified which house they want to go to
             if (numid<=totalhouses) then
-                self:Chat("Traveling to "..self.stringlist.homes[numid])
+                self:Chat("Traveling via ID to home "..self.stringlist.homes[numid])
                 RequestJumpToHouse(numid)
             else self:Chat("Could not find house ID to jump to")
         end
@@ -166,19 +166,19 @@ end
 function roam:JumpAccountHome(id, who)
     if (who=="friend") then
         if (id=="" or id=="1") then
-            self:Chat("Traveling to home owned by "..self.friend)
+            self:Chat("Traveling to friend home owned by "..self.friend)
             JumpToHouse(self.friend)
         elseif (id=="2") then
-            self:Chat("Traveling to home owned by "..self.friend2)
+            self:Chat("Traveling to friend home owned by "..self.friend2)
             JumpToHouse(self.friend2) end
     elseif (who=="guild") then
         if (id=="" or id=="1") then
-            self:Chat("Traveling to home owned by "..self.guild)
+            self:Chat("Traveling to guild home owned by "..self.guild)
             JumpToHouse(self.guild)
         elseif (id=="2") then
-            self:Chat("Traveling to home owned by "..self.guild2)
+            self:Chat("Traveling to guild home owned by "..self.guild2)
             JumpToHouse(self.guild2) end
-    else self:Chat("Roam Home 0.7 currently only supports 1 or 2") end
+    else end
 end
 
 function RoamHome:FindApartment(arg)
@@ -339,7 +339,7 @@ function RoamHome:CreateSettings()
                [1] = { -- starts friends menu --
                     type = "dropdown",
                     name = "Slash commands",
-                    tooltip = "DISABLED FOR 0.7 am soz",
+                    tooltip = "custom DISABLED FOR 0.7 am soz",
                     choices = {"/friend","/roamf","/homef"},
                     width = "full",
                     getFunc = function() return self.fstring end,
@@ -393,7 +393,7 @@ function RoamHome:CreateSettings()
                [1] = {
                     type = "dropdown",
                     name = "Slash commands",
-                    tooltip = "DISABLED FOR 0.7 am soz",
+                    tooltip = "custom DISABLED FOR 0.7 am soz",
                     choices = {"/guild","/roamg","/homeg"},
                     width = "full",
                     getFunc = function() return self.gstring end,
@@ -442,7 +442,7 @@ function RoamHome:CreateSettings()
 end
 
 -- Game hooks --
-SLASH_COMMANDS["/home"]=function(id) roam:JumpHome() end
+SLASH_COMMANDS["/home"]=function(id) roam:JumpHome(id) end
 SLASH_COMMANDS["/friend"]=function(id) roam:JumpAccountHome(id,"friend") end
 SLASH_COMMANDS["/guild"]=function(id) roam:JumpAccountHome(id,"guild") end
 SLASH_COMMANDS["/homedebug"]=function(id) roam.debug=not roam.debug roam:Chat("Roam Home debug: "..tostring(roam.debug)) roam.persistentSettings.debug=roam.debug end
