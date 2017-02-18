@@ -1,21 +1,16 @@
 -- Global table --
 RoamHome={
-    ver=1.3,
+    ver=1.0,
     debug=nil, -- makes mutinys life easier
     primary="", -- primary home for us
     primaryzone="", -- where that house is located
     secondary="", -- second home for us
     secondaryzone="",
     bind1="",
-    bool1=nil,
     bind2="",
-    bool2=nil,
     bind3="",
-    bool3=nil,
     bind4="",
-    bool4=nil,
     bind5="",
-    bool5=nil,
     string=nil, -- shows strings globally
     color="", -- string color
     hex="", -- string hex
@@ -33,15 +28,10 @@ RoamHome={
         secondary="",
         secondaryzone="",
         bind1="",
-        bool1=nil,
         bind2="",
-        bool2=nil,
         bind3="",
-        bool3=nil,
         bind4="",
-        bool4=nil,
         bind5="",
-        bool5=nil,
         string=true,
         color="default",
         hex="|cC0392B",
@@ -138,15 +128,10 @@ function RoamHome:Initialize() -- holy hell I need to shorten this
     self.primaryid=self.persistentSettings.primaryid
     self.secondaryid=self.persistentSettings.secondaryid
     self.bind1=self.persistentSettings.bind1
-    self.bool1=self.persistentSettings.bool1
     self.bind2=self.persistentSettings.bind2
-    self.bool2=self.persistentSettings.bool2
     self.bind3=self.persistentSettings.bind3
-    self.bool3=self.persistentSettings.bool3
     self.bind4=self.persistentSettings.bind4
-    self.bool4=self.persistentSettings.bool4
     self.bind4=self.persistentSettings.bind5
-    self.bool4=self.persistentSettings.bool5
     self:FindApartment()
     self:CreateSettings() -- creates settings VERY DELICATE do NOT derp inside function
     ZO_CreateStringId("SI_BINDING_NAME_JUMP_HOME","Travel home (/home)")
@@ -271,7 +256,7 @@ function RoamHome:SetKeybind(value, id)
     else 
         self.bind5=value
         self.persistentSettings.bind4=self.bind5
-    end
+    return end
 end
 
 function RoamHome:SelectHome(value,id)
@@ -315,7 +300,7 @@ function RoamHome:SelectHome(value,id)
         else
             self.secondaryid=false -- is not a homeid (@account)
             self.persistentSettings.secondaryid=self.secondaryid
-            self.secondary=value
+            self.secondary=value -- is this why it doesnt nickname? saves nick to @accname
             self.persistentSettings.secondary=self.secondary
             self.sdisplay=self.secondary
             self.persistentSettings.sdisplay=self.sdisplay
@@ -348,27 +333,32 @@ function RoamHome:HomeBind()
 
 function RoamHome:JumpBind1()
     self:Chat("Traveling to home owned by "..self.bind1)
-    JumpToHouse(self.bind1)         
+    JumpToHouse(self.bind1)
+    return         
 end
 
 function RoamHome:JumpBind2()
     self:Chat("Traveling to home owned by "..self.bind2)
-    JumpToHouse(self.bind2)        
+    JumpToHouse(self.bind2)     
+    return   
 end
 
 function RoamHome:JumpBind3()
     self:Chat("Traveling to home owned by "..self.bind3)
-    JumpToHouse(self.bind3)        
+    JumpToHouse(self.bind3)  
+    return      
 end
 
 function RoamHome:JumpBind4()
     self:Chat("Traveling to home owned by "..self.bind4)
-    JumpToHouse(self.bind4)         
+    JumpToHouse(self.bind4)        
+    return 
 end
 
 function RoamHome:JumpBind5()
     self:Chat("Traveling to home owned by "..self.bind5)
-    JumpToHouse(self.bind5)          
+    JumpToHouse(self.bind5)    
+    return      
 end
 
 function RoamHome:StringSettings(value) -- is complete
@@ -445,7 +435,7 @@ function RoamHome:CreateSettings()
          [5] = {
             type = "dropdown",
             name = "Slash commands",
-            tooltip = "",
+            tooltip = "coming soon! :)",
             choices = {"/home","/roam"},
             width = "full",
             getFunc = function() return self.hstring end,
@@ -475,12 +465,17 @@ function RoamHome:CreateSettings()
             tooltip = "",
             width = "full",
             controls= { -- START FRIEND SETTINGS --
-               [1] = {
+                [1] = {
+                    type = "description",
+                    text = "Save homes to the dropdown menus above",
+                    width = "full",           
+                    },
+               [2] = {
                     type = "header",
                     name = "|cC0392BFriends|r",
                     width = "half",           
                     },
-               [2] = {
+               [3] = {
                     type = "dropdown",
                     name = "@accountname",
                     tooltip = "",
@@ -489,27 +484,27 @@ function RoamHome:CreateSettings()
                     getFunc = function() return end,
                     setFunc = function(value) friendcache=value end,                
                     },
-                [3] = {
+                [4] = {
                     type = "editbox",
                     name = "Nickname (optional)",
-                    tooltip = "Save a name to access this home later",
+                    tooltip = "Save a memorable name for this home",
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) friendnamecache=value end,
                     },
-                [4] = {
+                [5] = {
                     type = "button",
                     name = "Save home",
                     tooltip = "This will reload the UI",
                     width = "full",
                     func = function() return self:SaveFriend() end,
                     },
-               [5] = {
+               [6] = {
                     type = "header",
                     name = "|cC0392BEveryone|r",
                     width = "half",           
                     },
-               [6] = {
+               [7] = {
                     type = "editbox",
                     name = "@accountname",
                     tooltip = "",
@@ -517,15 +512,15 @@ function RoamHome:CreateSettings()
                     getFunc = function() return end,
                     setFunc = function(value) anycache=value end,                
                     },
-                [7] = {
+                [8] = {
                     type = "editbox",
                     name = "Nickname (optional)",
-                    tooltip = "Save a name to access this home later",
+                    tooltip = "Save a memorable name for this home",
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) anynamecache=value end,
                     },
-                [8] = {
+                [9] = {
                     type = "button",
                     name = "Save home",
                     tooltip = "This will reload the UI",
@@ -542,7 +537,7 @@ function RoamHome:CreateSettings()
             controls= {
                 [1] = {
                     type = "description",
-                    text = "You can assign keybinds in the games control settings",
+                    text = "Set keybinds in game control settings",
                     width = "full",           
                     },
                [2] = {
@@ -554,7 +549,7 @@ function RoamHome:CreateSettings()
                 [3] = {
                     type = "editbox",
                     name = "Keybind 1",
-                    tooltip = "",
+                    tooltip = "@accountname",
                     width = "half",
                     getFunc = function() return self.bind1 end,
                     setFunc = function(value) self:SetKeybind(value, "1") end,
@@ -562,7 +557,7 @@ function RoamHome:CreateSettings()
                 [4] = {
                     type = "editbox",
                     name = "Keybind 2",
-                    tooltip = "",
+                    tooltip = "@accountname",
                     width = "half",
                     getFunc = function() return self.bind2 end,
                     setFunc = function(value) self:SetKeybind(value, "2") end,
@@ -570,7 +565,7 @@ function RoamHome:CreateSettings()
                 [5] = {
                     type = "editbox",
                     name = "Keybind 3",
-                    tooltip = "",
+                    tooltip = "@accountname",
                     width = "half",
                     getFunc = function() return self.bind3 end,
                     setFunc = function(value) self:SetKeybind(value, "3") end,
@@ -578,7 +573,7 @@ function RoamHome:CreateSettings()
                 [6] = {
                     type = "editbox",
                     name = "Keybind 4",
-                    tooltip = "",
+                    tooltip = "@accountname",
                     width = "half",
                     getFunc = function() return self.bind4 end,
                     setFunc = function(value) self:SetKeybind(value, "4") end,
@@ -586,7 +581,7 @@ function RoamHome:CreateSettings()
                 [7] = {
                     type = "editbox",
                     name = "Keybind 5",
-                    tooltip = "",
+                    tooltip = "@accountname",
                     width = "half",
                     getFunc = function() return self.bind5 end,
                     setFunc = function(value) self:SetKeybind(value, "5") end,
