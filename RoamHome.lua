@@ -6,6 +6,16 @@ RoamHome={
     primaryzone="", -- where that house is located
     secondary="", -- second home for us
     secondaryzone="",
+    bind1="",
+    bool1=nil,
+    bind2="",
+    bool2=nil,
+    bind3="",
+    bool3=nil,
+    bind4="",
+    bool4=nil,
+    bind5="",
+    bool5=nil,
     string=nil, -- shows strings globally
     color="", -- string color
     hex="", -- string hex
@@ -22,6 +32,16 @@ RoamHome={
         primaryzone="",
         secondary="",
         secondaryzone="",
+        bind1="",
+        bool1=nil,
+        bind2="",
+        bool2=nil,
+        bind3="",
+        bool3=nil,
+        bind4="",
+        bool4=nil,
+        bind5="",
+        bool5=nil,
         string=true,
         color="default",
         hex="|cC0392B",
@@ -117,9 +137,24 @@ function RoamHome:Initialize() -- holy hell I need to shorten this
     self.savedhouseids=self.persistentSettings.savedhouseids
     self.primaryid=self.persistentSettings.primaryid
     self.secondaryid=self.persistentSettings.secondaryid
+    self.bind1=self.persistentSettings.bind1
+    self.bool1=self.persistentSettings.bool1
+    self.bind2=self.persistentSettings.bind2
+    self.bool2=self.persistentSettings.bool2
+    self.bind3=self.persistentSettings.bind3
+    self.bool3=self.persistentSettings.bool3
+    self.bind4=self.persistentSettings.bind4
+    self.bool4=self.persistentSettings.bool4
+    self.bind4=self.persistentSettings.bind5
+    self.bool4=self.persistentSettings.bool5
     self:FindApartment()
     self:CreateSettings() -- creates settings VERY DELICATE do NOT derp inside function
-    ZO_CreateStringId("SI_BINDING_NAME_JUMP_HOME","Jump home")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_HOME","Travel home (/home)")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND1","Custom bind 1")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND2","Custom bind 2")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND3","Custom bind 3")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND4","Custom bind 4")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND5","Custom bind 5")
 	EVENT_MANAGER:UnregisterForEvent("RoamHome_OnLoaded",EVENT_ADD_ON_LOADED)
 end
 
@@ -154,8 +189,8 @@ function RoamHome:JumpHome(id)
                 self:Chat("Traveling to primary home "..self.stringlist.homes[self.primary])
                 RequestJumpToHouse(self.primary) -- now we home             
             else
-                self:Chat("Traveling to home owned by "..self.primary)
-                RequestJumpToHouse(self.primary)
+                self:Chat("Traveling to primary home owned by "..self.primary)
+                JumpToHouse(self.primary)
             end
         else
             if self.secondaryid then
@@ -163,7 +198,7 @@ function RoamHome:JumpHome(id)
                 RequestJumpToHouse(self.secondary) -- now we home             
             else
                 self:Chat("Traveling to secondary home owned by "..self.secondary)
-                RequestJumpToHouse(self.secondary)
+                JumpToHouse(self.secondary)
             end
         end
     else
@@ -199,6 +234,9 @@ end
 local friendcache=""
 local friendnamecache=""
 
+local anycache=""
+local anynamecache=""
+
 function RoamHome:SaveFriend() -- save cache to table
     if friendcache=="" then return end
     table.insert(self.savedhouseids, friendcache)
@@ -208,12 +246,40 @@ function RoamHome:SaveFriend() -- save cache to table
     ReloadUI()
 end
 
+function RoamHome:SaveAnyone()
+    if anycache=="" then return end
+    table.insert(self.savedhouseids, anycache)
+    if anynamecache=="" then
+        table.insert(self.savedhousestrings, anycache)
+    else table.insert(self.savedhousestrings, anynamecache) end
+    ReloadUI()
+end
+
+function RoamHome:SetKeybind(value, id)
+    if id=="1" then
+        self.bind1=value
+        self.persistentSettings.bind1=self.bind1
+    elseif id=="2" then
+        self.bind2=value
+        self.persistentSettings.bind2=self.bind2
+    elseif id=="3" then
+        self.bind3=value
+        self.persistentSettings.bind3=self.bind3
+    elseif id=="4" then
+        self.bind4=value
+        self.persistentSettings.bind4=self.bind4
+    else 
+        self.bind5=value
+        self.persistentSettings.bind4=self.bind5
+    end
+end
+
 function RoamHome:SelectHome(value,id)
     if (id=="primary") then
         if (value=="Primary Home") then
             self.primary=GetHousingPrimaryHouse()
             self.persistentSettings.primary=self.primary
-            self.pdisplay="Primary home"
+            self.pdisplay="Primary Home"
             self.persistentSettings.pdisplay=self.pdisplay
             self.primaryid=true
             self.persistentSettings.primaryid=self.primaryid
@@ -258,6 +324,53 @@ function RoamHome:SelectHome(value,id)
     end
 end
 
+-- needs shortening
+function RoamHome:HomeBind()
+        if self.primary~=location then
+            if self.primaryid then
+                self:Chat("Traveling to primary home "..self.stringlist.homes[self.primary])
+                RequestJumpToHouse(self.primary) -- now we home             
+            else
+                self:Chat("Traveling to primary home owned by "..self.primary)
+                JumpToHouse(self.primary)
+            end
+        else
+            if self.secondaryid then
+                self:Chat("Traveling to secondary home "..self.stringlist.homes[self.secondary])
+                RequestJumpToHouse(self.secondary)            
+            else
+                self:Chat("Traveling to secondary home owned by "..self.secondary)
+                JumpToHouse(self.secondary)
+            end
+        end
+    end
+
+
+function RoamHome:JumpBind1()
+    self:Chat("Traveling to home owned by "..self.bind1)
+    JumpToHouse(self.bind1)         
+end
+
+function RoamHome:JumpBind2()
+    self:Chat("Traveling to home owned by "..self.bind2)
+    JumpToHouse(self.bind2)        
+end
+
+function RoamHome:JumpBind3()
+    self:Chat("Traveling to home owned by "..self.bind3)
+    JumpToHouse(self.bind3)        
+end
+
+function RoamHome:JumpBind4()
+    self:Chat("Traveling to home owned by "..self.bind4)
+    JumpToHouse(self.bind4)         
+end
+
+function RoamHome:JumpBind5()
+    self:Chat("Traveling to home owned by "..self.bind5)
+    JumpToHouse(self.bind5)          
+end
+
 function RoamHome:StringSettings(value) -- is complete
     if value==true or value==false then
         self.string=not self.string
@@ -282,6 +395,10 @@ end
 
 function RoamHome_JumpHome() -- needed for hotkey
     roam:JumpHome()
+end
+
+function RoamHome_JumpBind1() -- needed for hotkey
+    roam:JumpBind1()
 end
 
 function RoamHome:CreateSettings()
@@ -361,7 +478,7 @@ function RoamHome:CreateSettings()
                [1] = {
                     type = "header",
                     name = "|cC0392BFriends|r",
-                    width = "full",           
+                    width = "half",           
                     },
                [2] = {
                     type = "dropdown",
@@ -398,7 +515,7 @@ function RoamHome:CreateSettings()
                     tooltip = "",
                     width = "full",
                     getFunc = function() return end,
-                    setFunc = function(value) end,                
+                    setFunc = function(value) anycache=value end,                
                     },
                 [7] = {
                     type = "editbox",
@@ -406,17 +523,76 @@ function RoamHome:CreateSettings()
                     tooltip = "Save a name to access this home later",
                     width = "full",
                     getFunc = function() return end,
-                    setFunc = function(value) end,
+                    setFunc = function(value) anynamecache=value end,
                     },
                 [8] = {
                     type = "button",
                     name = "Save home",
                     tooltip = "This will reload the UI",
                     width = "full",
-                    func = function() return end,
+                    func = function() return self:SaveAnyone() end,
                     },
                 },
-        },
+         },
+         [9] = {
+            type = "submenu",
+            name = "Edit keybinds",
+            tooltip = "",
+            width = "full",
+            controls= {
+                [1] = {
+                    type = "description",
+                    text = "You can assign keybinds in the games control settings",
+                    width = "full",           
+                    },
+               [2] = {
+                    type = "header",
+                    name = "|cC0392BDestinations|r",
+                    tooltip = "",
+                    width = "half",            
+                    },
+                [3] = {
+                    type = "editbox",
+                    name = "Keybind 1",
+                    tooltip = "",
+                    width = "half",
+                    getFunc = function() return self.bind1 end,
+                    setFunc = function(value) self:SetKeybind(value, "1") end,
+                    },
+                [4] = {
+                    type = "editbox",
+                    name = "Keybind 2",
+                    tooltip = "",
+                    width = "half",
+                    getFunc = function() return self.bind2 end,
+                    setFunc = function(value) self:SetKeybind(value, "2") end,
+                    },
+                [5] = {
+                    type = "editbox",
+                    name = "Keybind 3",
+                    tooltip = "",
+                    width = "half",
+                    getFunc = function() return self.bind3 end,
+                    setFunc = function(value) self:SetKeybind(value, "3") end,
+                    },
+                [6] = {
+                    type = "editbox",
+                    name = "Keybind 4",
+                    tooltip = "",
+                    width = "half",
+                    getFunc = function() return self.bind4 end,
+                    setFunc = function(value) self:SetKeybind(value, "4") end,
+                    },
+                [7] = {
+                    type = "editbox",
+                    name = "Keybind 5",
+                    tooltip = "",
+                    width = "half",
+                    getFunc = function() return self.bind5 end,
+                    setFunc = function(value) self:SetKeybind(value, "5") end,
+                    },
+            },
+        }
     }
     LAM:RegisterOptionControls("RoamHome", optionsData)
 	LAM:RegisterAddonPanel("RoamHome", panelData)
