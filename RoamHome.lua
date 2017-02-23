@@ -1,11 +1,11 @@
--- Global table --
+-- Global table -- scan owned homes ?
 RoamHome={
-    ver=1.0,
+    ver=9.4,
     debug=nil, -- makes mutinys life easier
     primary="", -- primary home for us
-    primaryzone="", -- where that house is located
+    primaryzone="", -- where that house is located -- redundant?
     secondary="", -- second home for us
-    secondaryzone="",
+    secondaryzone="", -- where secondary is located -- redundant ?
     bind1="",
     bind2="",
     bind3="",
@@ -17,7 +17,7 @@ RoamHome={
     hstring="", -- /home or /roam
     pdisplay="", -- what displays as primary home in settings
     sdisplay="", -- what displays as secondary home
-    savedhousestrings={}, -- saved (nick)names for houses
+    savedhousestrings={}, -- saved nicknames for saved @acc houses
     savedhouseids={"",""}, -- where jumpto() goes (id or @accn)
     primaryid=true, -- is it an @accn or id
     secondaryid=true,
@@ -41,7 +41,7 @@ RoamHome={
         savedhousestrings={"Primary Home","Free Apartment"},
         savedhouseids={GetHousingPrimaryHouse(),""},           
         primaryid=true,
-        secondaryid=true
+        secondaryid=true,
     },
 	persistentSettings={ },
     stringlist={
@@ -110,7 +110,7 @@ RoamHome={
 local roam = RoamHome
 
 -- Initialize --
-function RoamHome:Initialize() -- holy hell I need to shorten this
+function RoamHome:Initialize() -- holey moley I need to shorten this
 	self.persistentSettings=ZO_SavedVars:NewAccountWide("RoamHomeVars",self.ver,nil,self.defaultPersistentSettings)
     self.debug=self.persistentSettings.debug
     self.primary=self.persistentSettings.primary
@@ -132,14 +132,14 @@ function RoamHome:Initialize() -- holy hell I need to shorten this
     self.bind3=self.persistentSettings.bind3
     self.bind4=self.persistentSettings.bind4
     self.bind4=self.persistentSettings.bind5
-    self:FindApartment()
+    self:FindApartment() -- mutinys bandaid for assigning default home id
     self:CreateSettings() -- creates settings VERY DELICATE do NOT derp inside function
     ZO_CreateStringId("SI_BINDING_NAME_JUMP_HOME","Travel home (/home)")
-    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND1","Custom bind 1")
-    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND2","Custom bind 2")
-    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND3","Custom bind 3")
-    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND4","Custom bind 4")
-    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND5","Custom bind 5")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND1","Keybind 1")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND2","Keybind 2")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND3","Keybind 3")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND4","Keybind 4")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND5","Keybind 5")
 	EVENT_MANAGER:UnregisterForEvent("RoamHome_OnLoaded",EVENT_ADD_ON_LOADED)
 end
 
@@ -154,7 +154,7 @@ end
 
 local myFriendsOptions = {}
 
-function GetFriendsList()
+local function GetFriendsList()
     local f=GetNumFriends()
     for i=1,f do -- loops through friends 
         table.insert(myFriendsOptions, tostring(GetFriendInfo(i)))
@@ -166,7 +166,7 @@ function RoamHome:Chat(msg)
 end
 
 -- Addon --
-function RoamHome:JumpHome(id)
+function RoamHome:JumpHome(id) -- needs shortening
     local totalhouses,location,numid=TableLength(self.stringlist.homes),GetCurrentZoneHouseId(),tonumber(id)
     if (id=="") then -- if where not specified
         if self.primary~=location then
@@ -178,16 +178,17 @@ function RoamHome:JumpHome(id)
                 JumpToHouse(self.primary)
             end
         else
+            if self.primary==self.secondary then return end
             if self.secondaryid then
                 self:Chat("Traveling to secondary home "..self.stringlist.homes[self.secondary])
-                RequestJumpToHouse(self.secondary) -- now we home             
+                RequestJumpToHouse(self.secondary)           
             else
                 self:Chat("Traveling to secondary home owned by "..self.secondary)
                 JumpToHouse(self.secondary)
             end
         end
     else
-        if (numid<=totalhouses) then
+        if (numid<=totalhouses) then -- keeps causing error
             self:Chat("Traveling via home ID to "..self.stringlist.homes[numid])
             RequestJumpToHouse(numid)
         else self:Chat("Could not find house ID to jump to") end
@@ -231,7 +232,7 @@ function RoamHome:SaveFriend() -- save cache to table
     ReloadUI()
 end
 
-function RoamHome:SaveAnyone()
+function RoamHome:SaveAnyone() -- merge above ?
     if anycache=="" then return end
     table.insert(self.savedhouseids, anycache)
     if anynamecache=="" then
@@ -255,11 +256,11 @@ function RoamHome:SetKeybind(value, id)
         self.persistentSettings.bind4=self.bind4
     else 
         self.bind5=value
-        self.persistentSettings.bind4=self.bind5
+        self.persistentSettings.bind5=self.bind5
     return end
 end
 
-function RoamHome:SelectHome(value,id)
+function RoamHome:SelectHome(value,id) -- reduce debug strings
     if (id=="primary") then
         if (value=="Primary Home") then
             self.primary=GetHousingPrimaryHouse()
@@ -309,27 +310,27 @@ function RoamHome:SelectHome(value,id)
     end
 end
 
--- needs shortening
-function RoamHome:HomeBind()
-        if self.primary~=location then
-            if self.primaryid then
-                self:Chat("Traveling to primary home "..self.stringlist.homes[self.primary])
-                RequestJumpToHouse(self.primary) -- now we home             
-            else
-                self:Chat("Traveling to primary home owned by "..self.primary)
-                JumpToHouse(self.primary)
-            end
+-- needs shortening --
+function RoamHome:HomeBind() -- merge with jump home
+    local location=GetCurrentZoneHouseId()
+    if self.primary~=location then
+        if self.primaryid then
+            self:Chat("Traveling to primary home "..self.stringlist.homes[self.primary])
+            RequestJumpToHouse(self.primary) -- now we home             
         else
-            if self.secondaryid then
-                self:Chat("Traveling to secondary home "..self.stringlist.homes[self.secondary])
-                RequestJumpToHouse(self.secondary)            
-            else
-                self:Chat("Traveling to secondary home owned by "..self.secondary)
-                JumpToHouse(self.secondary)
-            end
+            self:Chat("Traveling to primary home owned by "..self.primary)
+            JumpToHouse(self.primary)
+        end
+    else
+        if self.secondaryid then
+            self:Chat("Traveling to secondary home "..self.stringlist.homes[self.secondary])
+            RequestJumpToHouse(self.secondary)            
+        else
+            self:Chat("Traveling to secondary home owned by "..self.secondary)
+            JumpToHouse(self.secondary)
         end
     end
-
+end
 
 function RoamHome:JumpBind1()
     self:Chat("Traveling to home owned by "..self.bind1)
@@ -361,6 +362,21 @@ function RoamHome:JumpBind5()
     return      
 end
 
+function RoamHome:ChangeCommand(value)
+    self.hstring=value
+    self.persistentSettings.hstring = self.hstring
+end
+
+function RoamHome:PersistentCommand(id, who)
+    if who=="roam" and self.hstring=="/roam" then
+        self:JumpHome(id)
+    elseif who=="home" and self.hstring=="/home" then
+        self:JumpHome(id)
+    else return end
+end
+
+-- end shortening --
+
 function RoamHome:StringSettings(value) -- is complete
     if value==true or value==false then
         self.string=not self.string
@@ -384,11 +400,27 @@ function RoamHome:CommandSettings(value, who) -- format done needs to be complet
 end
 
 function RoamHome_JumpHome() -- needed for hotkey
-    roam:JumpHome()
+    roam:HomeBind()
 end
 
 function RoamHome_JumpBind1() -- needed for hotkey
     roam:JumpBind1()
+end
+
+function RoamHome_JumpBind2() -- needed for hotkey
+    roam:JumpBind2()
+end
+
+function RoamHome_JumpBind3() -- needed for hotkey
+    roam:JumpBind3()
+end
+
+function RoamHome_JumpBind4() -- needed for hotkey
+    roam:JumpBind4()
+end
+
+function RoamHome_JumpBind5() -- needed for hotkey
+    roam:JumpBind5()
 end
 
 function RoamHome:CreateSettings()
@@ -398,22 +430,22 @@ function RoamHome:CreateSettings()
     local panelData = {
 	    type = "panel",
 	    name = "Roam Home",
-	    displayName = "|c641E16Roam |cC0392BHome|r",
+	    displayName = self.hex.."Roam Home",
 	    author = "mutiny",
         version = tostring(self.ver),
 		registerForDefaults = true,
-    slashCommand = "/roam"
+		registerForRefresh = true,
+    slashCommand = "/roamhome"
     }
     local optionsData = {
         [1] = {
             type = "header", -- DISPLAY SETTINGS
-            name = "|cC0392BDisplay|r settings",
+            name = self.hex.."Display|r settings",
             width = "full",
             },
          [2] = {
-            type = "checkbox",
-            name = "Show destination in chat window",
-            tooltip = "",
+            type = "checkbox", 
+            name = " Show destination in chat window",
             width = "half",
             getFunc = function() return self.string end,
             setFunc = function(value) self:StringSettings(value) end,
@@ -421,7 +453,6 @@ function RoamHome:CreateSettings()
          [3] = {
             type = "dropdown",
             name = "Message color",
-            tooltip = "",
             choices = {"default","red","green","blue","cyan","magenta","yellow","orange","purple","pink","brown","white","black","gray",},
             width = "half",
             getFunc = function() return self.color end,
@@ -429,56 +460,57 @@ function RoamHome:CreateSettings()
             },
          [4] = {
             type = "header", -- START HOME SETTINGS --
-            name = "|cC0392BHome|r settings",
+            name = self.hex.."Home|r settings",
             width = "full",
             },
          [5] = {
             type = "dropdown",
-            name = "Slash commands",
-            tooltip = "coming soon! :)",
+            name = " Slash command",
             choices = {"/home","/roam"},
             width = "full",
             getFunc = function() return self.hstring end,
             setFunc = function(value) self:CommandSettings(value, "home") end,
             },
-         [6] = {
+        [6] = {
+            type = "divider",
+            width = "full",           
+            },
+         [7] = {
             type = "dropdown",
-            name = "Primary home",
-            tooltip = "Select home to travel to with /home",
+            name = " First "..self.hstring.." jump",
             width = "half",
             choices = self.savedhousestrings,
             getFunc = function() return self.pdisplay end,
             setFunc = function(value) self:SelectHome(value, "primary") end,
             },
-         [7] = {
+         [8] = {
             type = "dropdown",
-            name = "   Secondary home",
-            tooltip = "Select home to travel to with /home",
+            name = " Second "..self.hstring.." jump",
+            warning = "Only works if primary is set to first /home",
             width = "half",
             choices = self.savedhousestrings,
             getFunc = function() return self.sdisplay end,
             setFunc = function(value) self:SelectHome(value, "secondary") end,
             },
-         [8] = {
+         [9] = {
             type = "submenu",
             name = "Add homes",
-            tooltip = "",
             width = "full",
             controls= { -- START FRIEND SETTINGS --
                 [1] = {
                     type = "description",
-                    text = "Save homes to the dropdown menus above",
+                    text = " Save homes to the dropdown menus above",
                     width = "full",           
                     },
                [2] = {
                     type = "header",
-                    name = "|cC0392BFriends|r",
+                    name = " "..self.hex.."Friends",
                     width = "half",           
                     },
                [3] = {
                     type = "dropdown",
-                    name = "@accountname",
-                    tooltip = "",
+                    name = " @accountname",
+                    sort = "name-up",
                     choices = myFriendsOptions,
                     width = "full",
                     getFunc = function() return end,
@@ -486,8 +518,9 @@ function RoamHome:CreateSettings()
                     },
                 [4] = {
                     type = "editbox",
-                    name = "Nickname (optional)",
-                    tooltip = "Save a memorable name for this home",
+                    disabled=true,
+                    name = " Nickname (optional)",
+                    tooltip = "Coming in future update",
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) friendnamecache=value end,
@@ -497,25 +530,25 @@ function RoamHome:CreateSettings()
                     name = "Save home",
                     tooltip = "This will reload the UI",
                     width = "full",
-                    func = function() return self:SaveFriend() end,
+                    func = function() self:SaveFriend() end,
                     },
                [6] = {
                     type = "header",
-                    name = "|cC0392BEveryone|r",
+                    name = " "..self.hex.."Everyone",
                     width = "half",           
                     },
                [7] = {
                     type = "editbox",
-                    name = "@accountname",
-                    tooltip = "",
+                    name = " @accountname",
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) anycache=value end,                
                     },
                 [8] = {
                     type = "editbox",
-                    name = "Nickname (optional)",
-                    tooltip = "Save a memorable name for this home",
+                    name = " Nickname (optional)",
+                    disabled=true,
+                    tooltip = "Coming in future update",
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) anynamecache=value end,
@@ -525,30 +558,28 @@ function RoamHome:CreateSettings()
                     name = "Save home",
                     tooltip = "This will reload the UI",
                     width = "full",
-                    func = function() return self:SaveAnyone() end,
+                    func = function() self:SaveAnyone() end,
                     },
                 },
          },
-         [9] = {
+         [10] = {
             type = "submenu",
             name = "Edit keybinds",
-            tooltip = "",
             width = "full",
             controls= {
                 [1] = {
                     type = "description",
-                    text = "Set keybinds in game control settings",
+                    text = " Assign keybinds in game control settings",
                     width = "full",           
                     },
                [2] = {
                     type = "header",
-                    name = "|cC0392BDestinations|r",
-                    tooltip = "",
+                    name = " "..self.hex.."Destinations",
                     width = "half",            
                     },
                 [3] = {
                     type = "editbox",
-                    name = "Keybind 1",
+                    name = " Keybind 1",
                     tooltip = "@accountname",
                     width = "half",
                     getFunc = function() return self.bind1 end,
@@ -556,7 +587,7 @@ function RoamHome:CreateSettings()
                     },
                 [4] = {
                     type = "editbox",
-                    name = "Keybind 2",
+                    name = " Keybind 2",
                     tooltip = "@accountname",
                     width = "half",
                     getFunc = function() return self.bind2 end,
@@ -564,7 +595,7 @@ function RoamHome:CreateSettings()
                     },
                 [5] = {
                     type = "editbox",
-                    name = "Keybind 3",
+                    name = " Keybind 3",
                     tooltip = "@accountname",
                     width = "half",
                     getFunc = function() return self.bind3 end,
@@ -572,7 +603,7 @@ function RoamHome:CreateSettings()
                     },
                 [6] = {
                     type = "editbox",
-                    name = "Keybind 4",
+                    name = " Keybind 4",
                     tooltip = "@accountname",
                     width = "half",
                     getFunc = function() return self.bind4 end,
@@ -580,7 +611,7 @@ function RoamHome:CreateSettings()
                     },
                 [7] = {
                     type = "editbox",
-                    name = "Keybind 5",
+                    name = " Keybind 5",
                     tooltip = "@accountname",
                     width = "half",
                     getFunc = function() return self.bind5 end,
@@ -595,10 +626,10 @@ end
 
 -- Game hooks --
 SLASH_COMMANDS["/test"]=function(id) d("primary: "..roam.primary.."  secondary: "..roam.secondary) end
-SLASH_COMMANDS["/home"]=function(id) roam:JumpHome(id) end
-SLASH_COMMANDS["/friend"]=function(id) roam:JumpAccountHome(id,"friend") end
-SLASH_COMMANDS["/guild"]=function(id) roam:JumpAccountHome(id,"guild") end
+SLASH_COMMANDS["/homeforce"]=function(id) RoamHome:CreateSettings() d("Forced RoamHome:CreateSettings()") end
 SLASH_COMMANDS["/homedebug"]=function(id) roam.debug=not roam.debug roam:Chat("Roam Home debug: "..tostring(roam.debug)) roam.persistentSettings.debug=roam.debug end
 
+SLASH_COMMANDS["/home"]=function(id) roam:PersistentCommand(id, "home") end
+SLASH_COMMANDS["/roam"]=function(id) roam:PersistentCommand(id, "roam") end
 
 EVENT_MANAGER:RegisterForEvent("RoamHome_OnLoaded",EVENT_ADD_ON_LOADED,function() roam:Initialize() end)

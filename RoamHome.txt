@@ -1,6 +1,6 @@
 ## Title: |c641E16Roam |cC0392BHome|r
-## Description: |cC0392B/guild|r to travel to saved guild house (setup is automatic on run)  |cC0392B/home|r to travel to primary house (and between free apartment)
-## Version: 0.3
+## Description: coming soon sorry check addon settings
+## Version: 1.2
 ## Author: mutiny
 ## APIVersion: 100018
 ## SavedVariables: RoamHomeVars
@@ -8,12 +8,14 @@
 
 libs\LibAddonMenu-2.0\LibStub\LibStub.lua
 libs\LibAddonMenu-2.0\LibAddonMenu-2.0\LibAddonMenu-2.0.lua
-libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\panel.lua
-libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\header.lua
 libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\button.lua
 libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\checkbox.lua
 libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\description.lua
 libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\dropdown.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\editbox.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\header.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\panel.lua
+libs\LibAddonMenu-2.0\LibAddonMenu-2.0\controls\submenu.lua
 
 RoamHome.lua
 Bindings.xml
