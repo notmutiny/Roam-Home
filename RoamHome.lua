@@ -1,6 +1,6 @@
 -- Global table --
 RoamHome={
-    ver=1.3996,
+    ver=1.3997,
     debug=nil, -- makes mutinys life easier
     string=nil, -- shows strings globally
     primary="", -- primary home id for us
@@ -176,6 +176,11 @@ function RoamHome:JumpHome(id) -- new (done ?)
                 end
             end
         end
+    elseif id=="DEBUG" then
+        local sdebug=nil if roam.debug then sdebug="|cff0000 disabled" else sdebug="|c00ff00 enabled" end
+		d(self.color[2].." Roam Home |cffff00debug mode"..sdebug.."|r")
+		self.debug=not self.debug
+		self.persistentSettings.debug=self.debug
     elseif (numid~=nil and numid<=totalhouses) then
         self:Chat("Traveling via home ID to "..self.stringlist.homes[numid])
         RequestJumpToHouse(numid)
@@ -442,7 +447,7 @@ function RoamHome:CreateSettings()
          [8] = {
             type = "dropdown",
             name = " Secondary destination",
-            --warning = "Only works if primary is set to first "..self.slash,
+            warning = "Only works if primary is an owned home",
             width = "half",
             choices = mySavedHomes,
             getFunc = function() return self.secondstring end,
@@ -486,7 +491,6 @@ function RoamHome:CreateSettings()
                 [6] = {
                     type = "editbox",
                     name = "  Nickname (optional)",
-                    --disabled=true,
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) friendnamecache=value end,
@@ -597,11 +601,10 @@ end
 
 -- Game hooks --
 --SLASH_COMMANDS["/test"]=function(id) d("primary: "..roam.primary.."  secondary: "..roam.secondary) end
-SLASH_COMMANDS["/homedebug"]=function(id) roam.debug=not roam.debug roam:Chat("Roam Home debug: "..tostring(roam.debug)) roam.persistentSettings.debug=roam.debug end
-
 SLASH_COMMANDS["/home"]=function(id) roam:PersistentCommand(id, "home") end
 SLASH_COMMANDS["/roam"]=function(id) roam:PersistentCommand(id, "roam") end
+SLASH_COMMANDS["//"]=function() if roam.debug then ReloadUI() end end
 
-SLASH_COMMANDS["/test"]=function(id) roam:GetSavedHomes() end
+--SLASH_COMMANDS["/test"]=function(id) roam:GetSavedHomes() end
 
 EVENT_MANAGER:RegisterForEvent("RoamHome_OnLoaded",EVENT_ADD_ON_LOADED,function() roam:Initialize() end)
