@@ -292,19 +292,26 @@ function RoamHome:SetKeybind(value, id)
 end
 
 function RoamHome:SelectHome(value,id) -- reduce debug strings
-    if (id=="primary") then
+    if (id=="primary" or id=="secondary") then
         for i=1,TableLength(self.homes) do
             if self.homes[i][3]==value then
-                self.primary=self.homes[i][1]
-                self.primestring=self.homes[i][3]
-                self.persistentSettings.primary=self.primary
-                self.persistentSettings.primestring=self.primestring    
-                d(self.primestring.." ["..self.homes[i][1].."]") return
+                if id=="primary" then
+                    self.primary=self.homes[i][1]
+                    self.primestring=self.homes[i][3]
+                    self.persistentSettings.primary=self.primary
+                    self.persistentSettings.primestring=self.primestring    
+                    if self.debug then self:Chat("Roam Home set primary to "..self.primestring.." ["..self.homes[i][1].."]") end return
+                elseif id=="secondary" then
+                    self.secondary=self.homes[i][1]
+                    self.secondstring=self.homes[i][3]
+                    self.persistentSettings.secondary=self.secondary
+                    self.persistentSettings.secondstring=self.secondstring    
+                    if self.debug then self:Chat("Roam Home set secondary to "..self.secondstring.." ["..self.homes[i][1].."]") end return
+                end
             end
         end
     end
 end
-
 
 --[[function RoamHome:SelectHome(value,id) -- reduce debug strings
     if (id=="primary") then
