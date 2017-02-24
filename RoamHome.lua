@@ -159,7 +159,6 @@ local function GetSavedHomes() -- new
 end
 
 -- Addon --
-
 function RoamHome:JumpHome(id) -- new
     local totalhouses,location,numid=TableLength(self.stringlist.homes),GetCurrentZoneHouseId(),tonumber(id)
     if (id=="") then -- if where not specified
@@ -168,11 +167,14 @@ function RoamHome:JumpHome(id) -- new
                 if self.homes[i][1]~=location then -- if were not at primary
                     self:Chat("Traveling to primary home "..self.homes[i][3])
                     RequestJumpToHouse(self.homes[i][1])
+                    return
                 else
+                    if self.primary==self.secondary then return end
                     for j=1,TableLength(self.homes) do
                         if self.homes[j][1]==self.secondary then -- loads all table data                
                             self:Chat("Traveling to secondary home "..self.homes[j][3])
                             RequestJumpToHouse(self.homes[j][1])
+                            return
                         end
                     end
                 end
@@ -215,8 +217,8 @@ end
 local friendcache=""
 local friendnamecache=""
 
-local anycache=""
-local anynamecache=""
+local homecache=""
+local homenamecache=""
 
 function RoamHome:SaveFriend() -- save cache to table
     if friendcache=="" then return end
@@ -277,7 +279,6 @@ function RoamHome:SelectHome(value,id) -- new
     end
 end
 
--- needs shortening --
 function RoamHome:HomeBind() -- merge with jump home
     local location=GetCurrentZoneHouseId()
     if self.primary~=location then
@@ -336,8 +337,6 @@ function RoamHome:PersistentCommand(id, who)
         self:JumpHome(id)
     else return end
 end
-
--- end shortening --
 
 function RoamHome:StringSettings(value) -- is complete
     if value==true or value==false then
@@ -438,7 +437,7 @@ function RoamHome:CreateSettings()
             },
          [7] = {
             type = "dropdown",
-            name = " Primary "..self.slash.." destination",
+            name = " Primary destination",
             width = "half",
             choices = mySavedHomes,
             getFunc = function() return self.primestring end,
@@ -446,8 +445,8 @@ function RoamHome:CreateSettings()
             },
          [8] = {
             type = "dropdown",
-            name = " Secondary "..self.slash.." destination",
-            warning = "Only works if primary is set to first "..self.slash,
+            name = " Secondary destination",
+            --warning = "Only works if primary is set to first "..self.slash,
             width = "half",
             choices = mySavedHomes,
             getFunc = function() return self.secondstring end,
@@ -465,12 +464,12 @@ function RoamHome:CreateSettings()
                     },
                [2] = {
                     type = "header",
-                    name = " "..self.color[2].."Friends",
-                    width = "half",           
+                    name = " "..self.color[2].."Accounts",
+                    width = "full",           
                     },
                [3] = {
                     type = "dropdown",
-                    name = " @accountname",
+                    name = " Select from friends",
                     sort = "name-up",
                     choices = myFriendsOptions,
                     width = "full",
@@ -479,42 +478,63 @@ function RoamHome:CreateSettings()
                     },
                 [4] = {
                     type = "editbox",
-                    disabled=true,
+                    name = " or type @accname",
+                    width = "full",
+                    getFunc = function() return end,
+                    setFunc = function(value) friendcache=value end,
+                    },
+                [5] = {
+                    type = "divider",
+                    width = "half",           
+                    },
+                [6] = {
+                    type = "editbox",
                     name = " Nickname (optional)",
-                    tooltip = "Coming in future update",
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) friendnamecache=value end,
                     },
-                [5] = {
+                [7] = {
                     type = "button",
                     name = "Save home",
                     warning = "This will reload the UI",
                     width = "full",
                     func = function() self:SaveFriend() end,
                     },
-               [6] = {
-                    type = "header",
-                    name = " "..self.color[2].."Everyone",
+               [8] = {
+                    type = "header", -- START PERSONALS --
+                    name = " "..self.color[2].."Personals",
+                    width = "full",           
+                    },
+               [9] = {
+                    type = "dropdown",
+                    name = " Select from homes",
+                    sort = "name-up",
+                    choices = self.stringlist.homes,
+                    width = "full",
+                    getFunc = function() return end,
+                    setFunc = function(value) homecache=value end,                
+                    },
+               [10] = {
+                    type = "editbox",
+                    name = " or type home ID",
+                    width = "full",
+                    getFunc = function() return end,
+                    setFunc = function(value) homecache=value end,                
+                    },
+                [11] = {
+                    type = "divider",
                     width = "half",           
                     },
-               [7] = {
-                    type = "editbox",
-                    name = " @accountname",
-                    width = "full",
-                    getFunc = function() return end,
-                    setFunc = function(value) anycache=value end,                
-                    },
-                [8] = {
+                [12] = {
                     type = "editbox",
                     name = " Nickname (optional)",
-                    disabled=true,
-                    tooltip = "Coming in future update",
+                    --disabled=true,
                     width = "full",
                     getFunc = function() return end,
-                    setFunc = function(value) anynamecache=value end,
+                    setFunc = function(value) homenamecache=value end,
                     },
-                [9] = {
+                [13] = {
                     type = "button",
                     name = "Save home",
                     warning = "This will reload the UI",
