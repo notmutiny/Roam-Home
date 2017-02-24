@@ -1,6 +1,6 @@
 -- Global table --
 RoamHome={
-    ver=1.395,
+    ver=1.397,
     debug=nil, -- makes mutinys life easier
     string=nil, -- shows strings globally
     primary="", -- primary home id for us
@@ -160,20 +160,22 @@ end
 
 -- Addon --
 function RoamHome:JumpHome(id) -- new
-    local totalhouses,location,numid=TableLength(self.stringlist.homes),GetCurrentZoneHouseId(),tonumber(id)
+    local totalhouses,location,numid,nump,nums=TableLength(self.stringlist.homes),GetCurrentZoneHouseId(),tonumber(id),tonumber(self.primary),tonumber(self.secondary)
     if (id=="") then -- if where not specified
         for i=1,TableLength(self.homes) do
-            if self.homes[i][1]==self.primary then -- loads all table data
+            if self.homes[i][3]==self.primestring then -- loads all table data
                 if self.homes[i][1]~=location then -- if were not at primary
                     self:Chat("Traveling to primary home "..self.homes[i][3])
-                    RequestJumpToHouse(self.homes[i][1])
+                    if nump~=nil then RequestJumpToHouse(self.homes[i][1])
+                    else JumpToHouse(self.homes[i][2]) end
                     return
                 else
-                    if self.primary==self.secondary then return end
+                    if self.primestring==self.secondstring then return end
                     for j=1,TableLength(self.homes) do
                         if self.homes[j][1]==self.secondary then -- loads all table data                
                             self:Chat("Traveling to secondary home "..self.homes[j][3])
-                            RequestJumpToHouse(self.homes[j][1])
+                            if nums~=nil then RequestJumpToHouse(self.homes[j][1])
+                            else JumpToHouse(self.homes[j][2]) end
                             return
                         end
                     end
@@ -220,22 +222,19 @@ local friendnamecache=""
 local homecache=""
 local homenamecache=""
 
-function RoamHome:SaveFriend() -- save cache to table
+function RoamHome:SaveAccount() -- save cache to table
     if friendcache=="" then return end
-    table.insert(self.savedhouseids, friendcache)
-    if friendnamecache=="" then
-        table.insert(self.savedhousestrings, friendcache)
-    else table.insert(self.savedhousestrings, friendnamecache) end
-    ReloadUI()
-end
-
-function RoamHome:SaveAnyone() -- merge above ?
-    if anycache=="" then return end
-    table.insert(self.savedhouseids, anycache)
-    if anynamecache=="" then
-        table.insert(self.savedhousestrings, anycache)
-    else table.insert(self.savedhousestrings, anynamecache) end
-    ReloadUI()
+    if friendnamecache=="" then table.insert(self.homes,{nil,friendcache,friendcache})
+    else table.insert(self.homes,{nil,friendcache,friendnamecache}) end
+    self.persistentSettings.homes=self.homes
+    for i=1,TableLength(self.homes) do
+        if self.homes[i][2]==friendcache then
+            self.secondary=self.homes[i][2]
+            self.secondstring=self.homes[i][3]
+            self.persistentSettings.secondary=self.secondary
+            self.persistentSettings.secondstring=self.secondstring
+            break end
+    ReloadUI() end
 end
 
 function RoamHome:SetKeybind(value, id)
@@ -266,13 +265,13 @@ function RoamHome:SelectHome(value,id) -- new
                     self.primestring=self.homes[i][3]
                     self.persistentSettings.primary=self.primary
                     self.persistentSettings.primestring=self.primestring    
-                    if self.debug then self:Chat("Roam Home set primary to "..self.primestring.." ["..self.homes[i][1].."]") end return
+                    if self.debug then self:Chat("Roam Home set primary to ["..tostring(self.homes[i][1]).."] ["..tostring(self.homes[i][2]).."] ["..tostring(self.homes[i][3]).."]") return end
                 elseif id=="secondary" then
                     self.secondary=self.homes[i][1]
                     self.secondstring=self.homes[i][3]
                     self.persistentSettings.secondary=self.secondary
                     self.persistentSettings.secondstring=self.secondstring    
-                    if self.debug then self:Chat("Roam Home set secondary to "..self.secondstring.." ["..self.homes[i][1].."]") end return
+                    if self.debug then self:Chat("Roam Home set secondary to ["..tostring(self.homes[i][1]).."] ["..tostring(self.homes[i][2]).."] ["..tostring(self.homes[i][3]).."]") return end
                 end
             end
         end
@@ -478,7 +477,7 @@ function RoamHome:CreateSettings()
                     },
                 [4] = {
                     type = "editbox",
-                    name = " or type @accname",
+                    name = " ... or type @accname",
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) friendcache=value end,
@@ -490,6 +489,7 @@ function RoamHome:CreateSettings()
                 [6] = {
                     type = "editbox",
                     name = " Nickname (optional)",
+                    --disabled=true,
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) friendnamecache=value end,
@@ -499,7 +499,7 @@ function RoamHome:CreateSettings()
                     name = "Save home",
                     warning = "This will reload the UI",
                     width = "full",
-                    func = function() self:SaveFriend() end,
+                    func = function() self:SaveAccount() end,
                     },
                [8] = {
                     type = "header", -- START PERSONALS --
@@ -517,7 +517,7 @@ function RoamHome:CreateSettings()
                     },
                [10] = {
                     type = "editbox",
-                    name = " or type home ID",
+                    name = " ... or type home ID",
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) homecache=value end,                
@@ -529,7 +529,7 @@ function RoamHome:CreateSettings()
                 [12] = {
                     type = "editbox",
                     name = " Nickname (optional)",
-                    --disabled=true,
+                    disabled=true,
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) homenamecache=value end,
