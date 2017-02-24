@@ -1,10 +1,10 @@
 -- Global table --
 RoamHome={
-    ver=1.37,
+    ver=1.39,
     debug=nil, -- makes mutinys life easier
-    primary="", -- primary home for us
+    primary="", -- primary home id for us
     primestring="", -- settings string to load
-    secondary="", -- second home for us
+    secondary="", -- second home id for us
     secondstring="", -- settings string to load
     homes={
         {nil,nil,""},
@@ -123,6 +123,7 @@ function RoamHome:Initialize() -- holey moley I need to shorten this
     self.primestring=self.persistentSettings.primestring
     self.secondary=self.persistentSettings.secondary
     self.secondstring=self.persistentSettings.secondstring
+    self.homes=self.persistentSettings.homes
     self.string=self.persistentSettings.string
     self.color=self.persistentSettings.color
     self.hex=self.persistentSettings.hex
@@ -168,14 +169,14 @@ end
 
 local mySavedHomes = {}
 
-local function GetSavedHomes()
+local function GetSavedHomes() -- new
     for i=1,TableLength(roam.homes) do
         table.insert(mySavedHomes, roam.homes[i][3])
     end
 end
 
 -- Addon --
-function RoamHome:CleanStringsUpdate()
+function RoamHome:CleanStringsUpdate() -- new
     local primaryid,alliance=GetHousingPrimaryHouse(),tonumber(GetUnitAlliance("player"))
     if self.homes[1][3]=="" then
         self.homes[1][1]=primaryid
@@ -292,6 +293,21 @@ end
 
 function RoamHome:SelectHome(value,id) -- reduce debug strings
     if (id=="primary") then
+        for i=1,TableLength(self.homes) do
+            if self.homes[i][3]==value then
+                self.primary=self.homes[i][1]
+                self.primestring=self.homes[i][3]
+                self.persistentSettings.primary=self.primary
+                self.persistentSettings.primestring=self.primestring    
+                d(self.primestring.." ["..self.homes[i][1].."]") return
+            end
+        end
+    end
+end
+
+
+--[[function RoamHome:SelectHome(value,id) -- reduce debug strings
+    if (id=="primary") then
         if (value=="Primary Home") then
             self.primary=GetHousingPrimaryHouse()
             self.persistentSettings.primary=self.primary
@@ -336,7 +352,7 @@ function RoamHome:SelectHome(value,id) -- reduce debug strings
             if self.debug then self:Chat("Roam Home set secondary to "..roam.sdisplay.." ["..roam.secondary.."]") end
         end
     end
-end
+end]]--
 
 -- needs shortening --
 function RoamHome:HomeBind() -- merge with jump home
