@@ -1,6 +1,6 @@
 ## Title: |c641E16Roam |cC0392BHome|r
-## Description: coming soon sorry check addon settings
-## Version: 1.2
+## Description: A simple way to teleport to any home across Tamriel.
+## Version: 1.4
 ## Author: mutiny
 ## APIVersion: 100018
 ## SavedVariables: RoamHomeVars
