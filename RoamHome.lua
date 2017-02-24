@@ -172,7 +172,7 @@ function RoamHome:JumpHome(id) -- new
                 else
                     if self.primestring==self.secondstring then return end
                     for j=1,TableLength(self.homes) do
-                        if self.homes[j][1]==self.secondary then -- loads all table data                
+                        if self.homes[j][3]==self.secondstring then -- loads all table data                
                             self:Chat("Traveling to secondary home "..self.homes[j][3])
                             if nums~=nil then RequestJumpToHouse(self.homes[j][1])
                             else JumpToHouse(self.homes[j][2]) end
@@ -271,7 +271,7 @@ function RoamHome:SelectHome(value,id) -- new
                     self.secondstring=self.homes[i][3]
                     self.persistentSettings.secondary=self.secondary
                     self.persistentSettings.secondstring=self.secondstring    
-                    if self.debug then self:Chat("Roam Home set secondary to ["..tostring(self.homes[i][1]).."] ["..tostring(self.homes[i][2]).."] ["..tostring(self.homes[i][3]).."]") return end
+                    if self.debug then self:Chat("Roam Home set secondary to ["..tostring(self.secondary).."] ["..tostring(self.homes[i][2]).."] ["..tostring(self.secondstring).."]") return end
                 end
             end
         end
