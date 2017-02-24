@@ -1,6 +1,6 @@
 -- Global table --
 RoamHome={
-    ver=1.398,
+    ver=1.3996,
     debug=nil, -- makes mutinys life easier
     string=nil, -- shows strings globally
     primary="", -- primary home id for us
@@ -11,8 +11,6 @@ RoamHome={
     binds={}, -- our keybinds table
     color={}, -- string color,hex
     slash="", -- /home or /roam
-    primaryid=true, -- is it an @accn or id DEL
-    secondaryid=true, -- DEL
     defaultPersistentSettings={
         debug=false,
         primary=nil,
@@ -32,11 +30,7 @@ RoamHome={
         },
         string=true,
         color={"default","|cC0392B"},
-        slash="/home",
-        pdisplay="Primary Home",
-        sdisplay="Free Apartment",   
-        primaryid=true,
-        secondaryid=true
+        slash="/home"
     },
 	persistentSettings={ },
     stringlist={
@@ -189,17 +183,21 @@ function RoamHome:JumpHome(id) -- new (done ?)
 end
 
 function RoamHome:CleanStringsUpdate() -- new
-    local primaryid,alliance,aptnum=GetHousingPrimaryHouse(),tonumber(GetUnitAlliance("player")),nil
+    local primaryhid,alliance,aptnum=GetHousingPrimaryHouse(),tonumber(GetUnitAlliance("player")),nil
     if self.homes[1][3]=="" then
-        self.homes[1][1]=primaryid
-        self.homes[1][3]=self.stringlist.homes[primaryid]
+        self.primary=primaryhid
+        self.persistentSettings.primary=self.primary
+        self.homes[1][1]=primaryhid
+        self.homes[1][3]=self.stringlist.homes[primaryhid]
         self.persistentSettings.homes[1]=self.homes[1]
         self.primestring=self.homes[1][3]
         self.persistentSettings.primestring=self.primestring        
         if alliance==1 then aptnum=1 end
         if alliance==2 then aptnum=3 end
         if alliance==3 then aptnum=2 end
-        if self.homes[1][1]~=aptnum then
+        if primaryid~=aptnum then
+            self.secondary=aptnum
+            self.persistentSettings.secondary=self.secondary
             self.homes[2][1]=aptnum
             self.homes[2][3]=self.stringlist.homes[self.homes[2][1]]
             self.persistentSettings.homes[2]=self.homes[2]
@@ -452,7 +450,7 @@ function RoamHome:CreateSettings()
             },
          [9] = {
             type = "submenu",
-            name = "Add homes",
+            name = "Edit homes",
             width = "full",
             controls= { -- START FRIEND SETTINGS --
                 [1] = {
@@ -467,7 +465,7 @@ function RoamHome:CreateSettings()
                     },
                [3] = {
                     type = "dropdown",
-                    name = " Select from friends",
+                    name = "  Select from friends",
                     sort = "name-up",
                     choices = myFriendsOptions,
                     width = "full",
@@ -476,7 +474,7 @@ function RoamHome:CreateSettings()
                     },
                 [4] = {
                     type = "editbox",
-                    name = " ... or type @accname",
+                    name = "  ... or type @accname",
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) friendcache=value end,
@@ -487,7 +485,7 @@ function RoamHome:CreateSettings()
                     },
                 [6] = {
                     type = "editbox",
-                    name = " Nickname (optional)",
+                    name = "  Nickname (optional)",
                     --disabled=true,
                     width = "full",
                     getFunc = function() return end,
@@ -507,7 +505,7 @@ function RoamHome:CreateSettings()
                     },
                [9] = {
                     type = "dropdown",
-                    name = " Select from homes",
+                    name = "  Select from homes",
                     --sort = "name-up",
                     choices = self.stringlist.homes,
                     width = "full",
@@ -516,13 +514,17 @@ function RoamHome:CreateSettings()
                     },
                [10] = {
                     type = "editbox",
-                    name = " ... and type home ID",
+                    name = "  ... and type home ID",
                     width = "full",
-                    warning = "This is temporary",
+                    warning = "This requirement is temporary",
                     getFunc = function() return end,
                     setFunc = function(value) homecache=value end,                
                     },
                 [11] = {
+                    type = "divider",
+                    width = "half",           
+                    },
+                [12] = {
                     type = "button",
                     name = "Save home",
                     warning = "This will reload the UI",
