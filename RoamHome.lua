@@ -159,6 +159,31 @@ local function GetSavedHomes() -- new
 end
 
 -- Addon --
+
+function RoamHome:JumpHome(id) -- new
+    local totalhouses,location,numid=TableLength(self.stringlist.homes),GetCurrentZoneHouseId(),tonumber(id)
+    if (id=="") then -- if where not specified
+        for i=1,TableLength(self.homes) do
+            if self.homes[i][1]==self.primary then -- loads all table data
+                if self.homes[i][1]~=location then -- if were not at primary
+                    self:Chat("Traveling to primary home "..self.homes[i][3])
+                    RequestJumpToHouse(self.homes[i][1])
+                else
+                    for j=1,TableLength(self.homes) do
+                        if self.homes[j][1]==self.secondary then -- loads all table data                
+                            self:Chat("Traveling to secondary home "..self.homes[j][3])
+                            RequestJumpToHouse(self.homes[j][1])
+                        end
+                    end
+                end
+            end
+        end
+    elseif (numid~=nil and numid<=totalhouses) then
+        self:Chat("Traveling via home ID to "..self.stringlist.homes[numid])
+        RequestJumpToHouse(numid)
+    else self:Chat("Could not find home ID to travel to") end
+end
+
 function RoamHome:CleanStringsUpdate() -- new
     local primaryid,alliance,aptnum=GetHousingPrimaryHouse(),tonumber(GetUnitAlliance("player")),nil
     if self.homes[1][3]=="" then
@@ -184,73 +209,9 @@ function RoamHome:Chat(msg)
     if self.string then d(self.color[2]..msg.."|r") end
 end
 
-function RoamHome:JumpHome(id) -- new
-    local totalhouses,location,numid=TableLength(self.stringlist.homes),GetCurrentZoneHouseId(),tonumber(id)
-    if (id=="") then -- if where not specified
-        for i=1,TableLength(self.homes) do
-            if self.homes[i][1]==self.primary then -- loads all table data
-                if self.homes[i][1]~=location then -- if were not at primary
-                    self:Chat("Traveling to primary home "..self.homes[i][3])
-                    RequestJumpToHouse(self.homes[i][1])
-                else
-                    for j=1,TableLength(self.homes) do
-                        if self.homes[j][1]==self.secondary then -- loads all table data                
-                            self:Chat("Traveling to secondary home "..self.homes[j][3])
-                            RequestJumpToHouse(self.homes[j][1])
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
---[[        if self.primary~=location then
-            if self.primaryid then
-                self:Chat("Traveling to primary home "..self.stringlist.homes[self.primary])
-                RequestJumpToHouse(self.primary) -- now we home             
-            else
-                self:Chat("Traveling to primary home owned by "..self.primary)
-                JumpToHouse(self.primary)
-            end
-        else
-            if self.primary==self.secondary then return end
-            if self.secondaryid then
-                self:Chat("Traveling to secondary home "..self.stringlist.homes[self.secondary])
-                RequestJumpToHouse(self.secondary)           
-            else
-                self:Chat("Traveling to secondary home owned by "..self.secondary)
-                JumpToHouse(self.secondary)
-            end
-        end
-    elseif (numid~=nil and numid<=totalhouses) then
-        self:Chat("Traveling via home ID to "..self.stringlist.homes[numid])
-        RequestJumpToHouse(numid)
-    else self:Chat("Could not find house ID to jump to") end
-end]]--
-
---[[function RoamHome:FindApartment(arg) -- done ?
-    local alliance=tonumber(GetUnitAlliance("player"))
-    if (self.secondary=="" or arg=="secondary") then
-        if alliance==1 then roam.secondary=1 end
-        if alliance==2 then roam.secondary=3 end
-        if alliance==3 then roam.secondary=2 end
-        roam.sdisplay="Free Apartment"
-        roam.persistentSettings.secondary=roam.secondary
-        roam.persistentSettings.sdisplay=roam.sdisplay
-        if roam.debug then roam:Chat("Roam Home set secondary to "..roam.sdisplay.." ["..roam.secondary.."]") end
-    elseif (arg=="primary") then
-        if alliance==1 then roam.primary=1 end
-        if alliance==2 then roam.primary=3 end
-        if alliance==3 then roam.primary=2 end
-        roam.pdisplay="Free Apartment"
-        roam.persistentSettings.primary=roam.primary
-        roam.persistentSettings.pdisplay=roam.pdisplay
-        if roam.debug then roam:Chat("Roam Home set primary to "..roam.pdisplay.." ["..roam.primary.."]") end
-    else return end
-end]]--
 
 -- Settings --
+
 local friendcache=""
 local friendnamecache=""
 
