@@ -1,6 +1,6 @@
 -- Global table --
 RoamHome={
-    ver=1.404,
+    ver=1.407,
     debug=nil, -- makes mutinys life easier
     string=nil, -- shows strings globally
     primary="", -- primary home id for us
@@ -20,13 +20,7 @@ RoamHome={
         homes={
             {nil,nil,""}, -- ID, @accountname, home name
         },
-        binds={
-            bind1="",
-            bind2="",
-            bind3="",
-            bind4="",
-            bind5="",
-        },
+        binds={"","","","",""},
         string=true,
         color={"default","|cC0392B"},
         slash="/home"
@@ -112,7 +106,7 @@ function RoamHome:Initialize()
     self.binds=self.persistentSettings.binds -- new
     self:CleanStringsUpdate()
     self:CreateSettings() -- creates settings VERY DELICATE do NOT derp inside function
-    ZO_CreateStringId("SI_BINDING_NAME_JUMP_HOME","Travel home (/home)")
+    ZO_CreateStringId("SI_BINDING_NAME_JUMP_HOME","Travel Home (/home)")
     ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND1","Keybind 1")
     ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND2","Keybind 2")
     ZO_CreateStringId("SI_BINDING_NAME_JUMP_BIND3","Keybind 3")
@@ -148,21 +142,6 @@ local function GetSavedHomes() -- new
 end
 
 -- Addon --
-function RoamHome:JumpBind1()
-    local numid,totalhouses=tonumber(self.binds.bind1),TableLength(self.stringlist.homes)
-    d(self.binds.bind1)
-    for i=1,TableLength(self.homes) do
-        if self.homes[i][3]==self.binds.bind1 then
-            if self.homes[i][2]==nil then
-                self:Chat("Traveling to home "..self.homes[i][3].." ["..self.homes[i][1].."]")
-                RequestJumpToHouse(self.homes[i][1])
-            else
-                self:Chat("AN ACCOUNT YAY")
-            break end
-        end
-    end
-end
-
 function RoamHome:JumpHome(id) -- new (done ?)
     local totalhouses,location,numid,nump,nums=TableLength(self.stringlist.homes),GetCurrentZoneHouseId(),tonumber(id),tonumber(self.primary),tonumber(self.secondary)
     if (id=="") then -- if where not specified
@@ -232,6 +211,8 @@ local friendnamecache=""
 
 local homecache=""
 
+local deletecache=""
+
 function RoamHome:SaveAccount() -- save cache to table (done ?)
     if friendcache=="" then return end
     if friendnamecache=="" then table.insert(self.homes,{nil,friendcache,friendcache})
@@ -245,6 +226,16 @@ function RoamHome:SaveAccount() -- save cache to table (done ?)
             self.persistentSettings.secondstring=self.secondstring
             break end
     ReloadUI() end
+end
+
+function RoamHome:Delete() -- save cache to table (done ?)
+    if deletecache=="" or deletecache==self.homes[1][3] then return end
+    for i=1,TableLength(self.homes) do
+        if self.homes[i][3]==deletecache then
+            table.remove(self.homes,i)
+            break end
+        end
+    ReloadUI()
 end
 
 function RoamHome:SaveHome() -- save cache to table (done ?)
@@ -273,20 +264,20 @@ end
 
 function RoamHome:SetKeybind(value, id)
     if id=="1" then
-        self.binds.bind1=value
-        self.persistentSettings.binds.bind1=self.binds.bind1
+        self.binds[1]=value
+        self.persistentSettings.binds[1]=self.binds[1]
     elseif id=="2" then
-        self.binds.bind2=value
-        self.persistentSettings.binds.bind2=self.binds.bind2
+        self.binds[2]=value
+        self.persistentSettings.binds[2]=self.binds[2]
     elseif id=="3" then
-        self.binds.bind3=value
-        self.persistentSettings.binds.bind3=self.binds.bind3
+        self.binds[3]=value
+        self.persistentSettings.binds[3]=self.binds[3]
     elseif id=="4" then
-        self.binds.bind4=value
-        self.persistentSettings.binds.bind4=self.binds.bind4
+        self.binds[4]=value
+        self.persistentSettings.binds[4]=self.binds[4]
     elseif id=="5" then
-        self.binds.bind5=value
-        self.persistentSettings.binds.bind5=self.binds.bind5
+        self.binds[5]=value
+        self.persistentSettings.binds[5]=self.binds[5]
     else return end
 end
 
@@ -314,28 +305,6 @@ end
 
 function RoamHome:HomeBind() -- merge with jump home
     roam:JumpHome("")
-end
-
-
-
-function RoamHome:JumpBind2()
-    self:Chat("Traveling to home owned by "..self.binds.bind2)
-    JumpToHouse(self.binds.bind2)      
-end
-
-function RoamHome:JumpBind3()
-    self:Chat("Traveling to home owned by "..self.binds.bind3)
-    JumpToHouse(self.binds.bind3)      
-end
-
-function RoamHome:JumpBind4()
-    self:Chat("Traveling to home owned by "..self.binds.bind4)
-    JumpToHouse(self.binds.bind4)        
-end
-
-function RoamHome:JumpBind5()
-    self:Chat("Traveling to home owned by "..self.binds.bind5)
-    JumpToHouse(self.binds.bind5)         
 end
 
 function RoamHome:ChangeCommand(value)
@@ -372,28 +341,43 @@ function RoamHome:CommandSettings(value, who)
     end
 end
 
+function RoamHome:JumpBind(num)
+    local numid,totalhouses=tonumber(self.binds[num]),TableLength(self.stringlist.homes)
+    for i=1,TableLength(self.homes) do
+        if self.homes[i][3]==self.binds[num] then
+            if self.homes[i][2]==nil then
+                self:Chat("Traveling to home "..self.homes[i][3])
+                RequestJumpToHouse(self.homes[i][1])
+            else
+                self:Chat("Traveling to home "..self.homes[i][3])
+                JumpToHouse(self.homes[i][2]) end
+            break
+        end
+    end
+end
+
 function RoamHome_JumpHome() -- needed for hotkey
     roam:HomeBind()
 end
 
 function RoamHome_JumpBind1() -- needed for hotkey
-    roam:JumpBind1()
+    roam:JumpBind(1)
 end
 
 function RoamHome_JumpBind2() -- needed for hotkey
-    roam:JumpBind2()
+    roam:JumpBind(2)
 end
 
 function RoamHome_JumpBind3() -- needed for hotkey
-    roam:JumpBind3()
+    roam:JumpBind(3)
 end
 
 function RoamHome_JumpBind4() -- needed for hotkey
-    roam:JumpBind4()
+    roam:JumpBind(4)
 end
 
 function RoamHome_JumpBind5() -- needed for hotkey
-    roam:JumpBind5()
+    roam:JumpBind(5)
 end
 
 function RoamHome:CreateSettings()
@@ -546,6 +530,30 @@ function RoamHome:CreateSettings()
                     width = "full",
                     func = function() self:SaveHome() end,
                     },
+               [13] = {
+                    type = "header", -- START PERSONALS --
+                    name = " "..self.color[2].."Remove",
+                    width = "full",           
+                    },
+                [14] = {
+                    type = "dropdown",
+                    name = "  Select from saves",
+                    width = "full",
+                    choices = mySavedHomes,
+                    getFunc = function() return end,
+                    setFunc = function(value) deletecache=value end,
+                    },
+                [15] = {
+                    type = "divider",
+                    width = "half",           
+                    },
+                [16] = {
+                    type = "button",
+                    name = "Remove home",
+                    warning = "This will reload the UI",
+                    width = "full",
+                    func = function() self:Delete() end,
+                    },
                 },
          },
          [10] = {
@@ -566,42 +574,41 @@ function RoamHome:CreateSettings()
                 [3] = {
                     type = "dropdown",
                     name = " Keybind 1",
-                    --tooltip = "@accountname",
                     width = "half",
                     choices = mySavedHomes,
-                    getFunc = function() return self.binds.bind1 end,
+                    getFunc = function() return self.binds[1] end,
                     setFunc = function(value) self:SetKeybind(value, "1") end,
                     },
                 [4] = {
-                    type = "editbox",
+                    type = "dropdown",
                     name = " Keybind 2",
-                    tooltip = "@accountname",
                     width = "half",
-                    getFunc = function() return self.binds.bind2 end,
+                    choices = mySavedHomes,
+                    getFunc = function() return self.binds[2] end,
                     setFunc = function(value) self:SetKeybind(value, "2") end,
                     },
                 [5] = {
-                    type = "editbox",
+                    type = "dropdown",
                     name = " Keybind 3",
-                    tooltip = "@accountname",
                     width = "half",
-                    getFunc = function() return self.binds.bind3 end,
+                    choices = mySavedHomes,
+                    getFunc = function() return self.binds[3] end,
                     setFunc = function(value) self:SetKeybind(value, "3") end,
                     },
                 [6] = {
-                    type = "editbox",
+                    type = "dropdown",
                     name = " Keybind 4",
-                    tooltip = "@accountname",
                     width = "half",
-                    getFunc = function() return self.binds.bind4 end,
+                    choices = mySavedHomes,
+                    getFunc = function() return self.binds[4] end,
                     setFunc = function(value) self:SetKeybind(value, "4") end,
                     },
                 [7] = {
-                    type = "editbox",
+                    type = "dropdown",
                     name = " Keybind 5",
-                    tooltip = "@accountname",
                     width = "half",
-                    getFunc = function() return self.binds.bind5 end,
+                    choices = mySavedHomes,
+                    getFunc = function() return self.binds[5] end,
                     setFunc = function(value) self:SetKeybind(value, "5") end,
                     },
             },
