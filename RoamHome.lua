@@ -1,6 +1,6 @@
 -- Global table --
 RoamHome={
-    ver=1.407,
+    ver=1.41,
     debug=nil, -- makes mutinys life easier
     string=nil, -- shows strings globally
     primary="", -- primary home id for us
@@ -88,6 +88,8 @@ RoamHome={
         }
     }
 }
+
+local version = "1.5.0"
 
 local roam = RoamHome
 
@@ -242,11 +244,13 @@ function RoamHome:SaveHome() -- save cache to table (done ?)
     if homecache=="" then return end
     local numh=tonumber(homecache)
     if numh~=nil then
+        for i=1,TableLength(self.homes) do if self.homes[i][1]==numh then return end end        
         if numh>TableLength(self.stringlist.homes) then return end
         table.insert(self.homes,{numh,nil,self.stringlist.homes[numh]})
         self.secondary=numh
         self.secondstring=self.stringlist.homes[numh]
     else
+        for i=1,TableLength(self.homes) do if self.homes[i][3]==homecache then return end end
         for i=1, TableLength(self.stringlist.homes) do
             if homecache==self.stringlist.homes[i] then
                 table.insert(self.homes,{i,nil,homecache})
@@ -390,7 +394,7 @@ function RoamHome:CreateSettings()
 	    name = "Roam Home",
 	    displayName = self.color[2].."Roam Home",
 	    author = "mutiny",
-        version = tostring(self.ver),
+        version = version,
 		registerForDefaults = true,
     slashCommand = "/roamhome"
     }
@@ -456,7 +460,7 @@ function RoamHome:CreateSettings()
             controls= { -- START FRIEND SETTINGS --
                 [1] = {
                     type = "description",
-                    text = " Save homes to the dropdown menus above. This submenu may be later revised.",
+                    text = " Save destinations to use with Roam Home. This submenu may be later revised.",
                     width = "full",           
                     },
                [2] = {
@@ -486,7 +490,7 @@ function RoamHome:CreateSettings()
                     },
                 [6] = {
                     type = "editbox",
-                    name = "  Save name (optional)",
+                    name = "  Nickname (optional)",
                     width = "full",
                     getFunc = function() return end,
                     setFunc = function(value) friendnamecache=value end,
