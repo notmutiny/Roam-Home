@@ -4,6 +4,9 @@
 			<Action name="JUMP_HOME">
 				<Down>RoamHome_JumpHome()</Down>
 			</Action>
+			<Action name="JUMP_ROAM">
+				<Down>RoamHome_JumpRoam()</Down>
+			</Action>
 			<Action name="JUMP_BIND1">
 				<Down>RoamHome_JumpBind1()</Down>
 			</Action>
@@ -18,6 +21,21 @@
 			</Action>
 			<Action name="JUMP_BIND5">
 				<Down>RoamHome_JumpBind5()</Down>
+			</Action>
+			<Action name="JUMP_BIND6">
+				<Down>RoamHome_JumpBind6()</Down>
+			</Action>
+			<Action name="JUMP_BIND7">
+				<Down>RoamHome_JumpBind7()</Down>
+			</Action>
+			<Action name="JUMP_BIND8">
+				<Down>RoamHome_JumpBind8()</Down>
+			</Action>
+			<Action name="JUMP_BIND9">
+				<Down>RoamHome_JumpBind9()</Down>
+			</Action>
+			<Action name="JUMP_BIND10">
+				<Down>RoamHome_JumpBind10()</Down>
 			</Action>
 		</Category>
 	</Layer>
