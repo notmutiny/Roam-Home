@@ -1,6 +1,6 @@
 -- Global table --
 RoamHome={
-    ver="1.7 alpha",
+    ver="1.7 beta",
     debug=nil, -- makes mutinys life easier
     string=nil, -- shows strings globally
     primary={}, -- primary home id for us
@@ -15,7 +15,7 @@ RoamHome={
         primary={},
         secondary={},
         homes={
-            {0,"/",""}, -- ID, @accountname, home name
+            {0,"nil",""}, -- ID, @accountname, home name
         },
         binds={},
         color={"default","|cC0392B"},
@@ -87,12 +87,11 @@ RoamHome={
 
 local roam = RoamHome
 
-local empty = "/" -- what debug prints
-
+local empty = "nil" -- what debug prints
 
 -- Initialize --
 function RoamHome:Initialize()
-	self.persistentSettings=ZO_SavedVars:NewAccountWide("RoamHomeVars",1.69996,nil,self.defaultPersistentSettings)
+	self.persistentSettings=ZO_SavedVars:NewAccountWide("RoamHomeVars",1.6999993,nil,self.defaultPersistentSettings)
     self.debug=self.persistentSettings.debug
     self.string=self.persistentSettings.string
     self.primary=self.persistentSettings.primary
@@ -101,7 +100,7 @@ function RoamHome:Initialize()
     self.binds=self.persistentSettings.binds -- new
     self.color=self.persistentSettings.color
     self.slash=self.persistentSettings.slash
-    self:SetPrimary() -- mutinys bandaid at finding your homes since api is a mess
+    self:SetHomes()
     self:FindHomes() -- auto adds owned homes
     self:CreateSettings() -- creates settings VERY DELICATE do NOT derp inside function
     ZO_CreateStringId("SI_BINDING_NAME_JUMP_HOME","Travel home (/home)")
@@ -162,79 +161,55 @@ function roam:DebugPrintHouses()
     end
 end
 
-function roam:DebugPrintHome()
-    d("Destinations: "..self.primary[2].." ["..self.primary[1].."] || "..self.secondary[2].." ["..self.secondary[1].."]")
-end
-
--- Sandbox --
-local globalmems = {}
-
-function roam:RoamHomes()
-    if TableLength(globalmems)==0 then
-        local g,u,o,l,q,s,n = "t_","mu","n","y","ti","no","u"
-        local guilds,a,globalnum=GetNumGuilds(),"@",1 -- our total number of guilds
-        table.insert(globalmems,{globalnum,"New Bank Conglomerate",a..s..g..u..q..o..l})
-        for i=1,guilds do -- current guild num, max num guilds (loops through guilds)
-            local guildmem=GetNumGuildMembers(i) -- gets guild member num for each guild
-            for j=1,guildmem do -- current guild mem, max mems (loops through each guild member)
-                local name,note,rankIndex,playerStatus,secsSinceLogoff = GetGuildMemberInfo(i,j)
-                globalnum=globalnum+1 table.insert(globalmems,{globalnum,GetGuildName(i),name}) -- table number, which guild, player name
-            end
-        end
-    end
-    local rando=math.random(TableLength(globalmems))
-    if self.debug then self:Chat(globalmems[rando][2].." < guild ID || ["..rando.."] || who > "..globalmems[rando][3]) end
-    self:Chat("Traveling to home owned by "..globalmems[rando][3].." in "..globalmems[rando][2].." [|r"..rando..self.color[2].."]")
-    JumpToHouse(globalmems[rando][3])
-end
-
-function roam:Test()
-    for i=1,TableLength(globalmems) do
-        d(globalmems[i][1].." "..globalmems[i][2].." "..globalmems[i][3])
-    end
+function roam:DebugPrintDestinations()
+    d("Destinations: "..tostring(self.primary[2]).." ["..tostring(self.primary[1]).."] || "..tostring(self.secondary[2]).." ["..tostring(self.secondary[1]).."]")
 end
 
 -- Addon --
-function RoamHome:SetPrimary()
+function RoamHome:SetHomes()
     if self.homes[1][1]==0 then -- if homes have not been saved
         self.homes[1][1],self.homes[1][3]=GetHousingPrimaryHouse(),self.stringlist.homes[GetHousingPrimaryHouse()]
         self.primary[1],self.primary[2]=self.homes[1][1],self.homes[1][3]
         self.persistentSettings.primary=self.primary
+        local alliance,aptnum=tonumber(GetUnitAlliance("player")),0
+        if alliance==1 then aptnum=1 end
+        if alliance==2 then aptnum=3 end
+        if alliance==3 then aptnum=2 end
+        if self.primary[1]~=aptnum then
+            self.secondary[1],self.secondary[2]=aptnum,self.stringlist.homes[aptnum]
+            self.persistentSettings.secondary=self.secondary
+        end
     end
 end
 
-function roam:SetSecondary()
-    if TableLength(self.secondary)==0 then
-        local i=TableLength(self.homes)
-        self.secondary[1],self.secondary[2]=self.homes[i][1],self.homes[i][3]
-        self.persistentSettings.secondary=self.secondary
-    end
-end
-
-function RoamHome:FindHomes()
+function RoamHome:FindHomes() -- done ?
     for i=1,TableLength(self.stringlist.homes) do -- check every home
-        local collectible,owned=GetCollectibleIdForHouse(i),nil -- get collectible ID for home
+        local collectible,saved=GetCollectibleIdForHouse(i),nil -- get collectible ID for home
         local name,description,icon,lockedIcon,unlocked,purchasable,isActive,Collectible,categoryType,hint,isPlaceholder=GetCollectibleInfo(collectible)
         for h=1,TableLength(self.homes) do -- scan saved homes to prevent duplicates
-            if self.stringlist.homes[i]==self.homes[h][3] then owned=true break else end end -- if its already saved dont re add
-        if unlocked==true and owned~=true then table.insert(self.homes,{i,empty,self.stringlist.homes[i]}) end -- add to our owned homes table
+            if self.stringlist.homes[i]==self.homes[h][3] then saved=true break else end end -- if its already saved dont re add
+        if unlocked==true and saved~=true then table.insert(self.homes,{i,empty,self.stringlist.homes[i]}) end -- add to our owned homes table
     end
     self.persistentSettings.homes=self.homes
-    self:SetSecondary()
-    --if self.debug then self:DebugPrintHouses() self:DebugPrintHome() end
+    if TableLength(self.secondary)==0 then -- adds secondary jump if not set to apartment
+        local k=TableLength(self.homes)        
+        if k>1 then self.secondary[1],self.secondary[2]=self.homes[k][1],self.homes[k][3] end end
+    if self.debug then self:DebugPrintHouses() self:DebugPrintDestinations()end
 end
 
-function RoamHome:SelectHome(value,id) -- new
+function RoamHome:SelectHome(value,id) -- done ?
     if (id=="primary" or id=="secondary") then
         for i=1,TableLength(self.homes) do
             if self.homes[i][3]==value then
                 if id=="primary" then
-                    self.primary[1]=self.homes[i][1]
+                    if self.homes[i][1]==empty then self.primary[1]=self.homes[i][2]
+                    else self.primary[1]=self.homes[i][1] end
                     self.primary[2]=self.homes[i][3]
                     self.persistentSettings.primary=self.primary 
                     if self.debug then self:Chat("Roam Home set primary to ["..tostring(self.homes[i][1]).."] ["..tostring(self.homes[i][2]).."] ["..tostring(self.homes[i][3]).."]") return end
                 elseif id=="secondary" then
-                    self.secondary[1]=self.homes[i][1]
+                    if self.homes[i][1]==empty then self.secondary[1]=self.homes[i][2]
+                    else self.secondary[1]=self.homes[i][1] end
                     self.secondary[2]=self.homes[i][3]
                     self.persistentSettings.secondary=self.secondary
                     if self.debug then self:Chat("Roam Home set secondary to ["..tostring(self.homes[i][1]).."] ["..tostring(self.homes[i][2]).."] ["..tostring(self.homes[i][3]).."]") return end
@@ -245,7 +220,7 @@ function RoamHome:SelectHome(value,id) -- new
 end
 
 -- Jump Home --
-function RoamHome:PersistentCommand(id, who)
+function RoamHome:PersistentCommand(id, who) -- done
     if who=="roam" and self.slash=="/roam" then
         self:JumpHome(id)
     elseif who=="home" and self.slash=="/home" then
@@ -276,9 +251,82 @@ function RoamHome:JumpHome(id)
         if (where~=nil and where<=total) then
             self:Chat("Traveling via home ID to "..self.stringlist.homes[where])
             RequestJumpToHouse(where)
+        elseif (where==nil) then
+            self:Chat("Traveling to home owned by "..id)
+            JumpToHouse(id) 
         else self:Chat("Could not find home ID to travel to") end
     end
+end   
+
+--[[   mutinys clipboard
+    function roam:JumpHome(id)
+    local zone=GetCurrentZoneHouseId()
+    if id=="" then
+        if tonumber(self.primary[1])~=nil then
+            if self.primary[1]~=zone then self:JumpPrimary()
+            else self:JumpSecondary() end
+        else
+            if loccache~=zone then -- if we are going somewhere new
+                if acccache~=self.primary[1] then               
+                    self:JumpPrimary()
+                    acccache=self.primary[1] loccache=zone
+                else self:JumpSecondary()
+                    acccache=self.primary[1] loccache=zone
+                end
+            else -- if last jump was unsuccessful
+                if acccache==self.secondary[1] then               
+                    self:JumpPrimary()
+                    acccache=self.primary[1]
+                else self:JumpSecondary()
+                    acccache=self.secondary[1]
+                end
+            end
+        end
+    end
+end 
+             if acccache~=self.primary then
+                if loccache~=zone then -- if we havent left yet
+                    d("jump to "..self.primary[1])
+                else d("jump to "..self.secondary[1])
+            else
+                if loccache==zone then -- if we havent left yet
+                    d("jump to "..self.primary[1])
+                else d("jump to "..self.secondary[1])
+            end
+            acccache=self.primary[1] loccache=zone
+            d(tostring(acccache).." "..tostring(loccache))       
+        end
+    end
 end
+
+function roam:JumpHome(id)
+    local zone=GetCurrentZoneHouseId()
+    if id=="" then
+        if tonumber(self.primary[1])~=nil and tonumber(self.secondary[1])~=nil then
+            d("both local")
+        else d("one acc") end
+    end
+end        
+ 
+    if where~=self.primary[1] then
+            if lastacc~="" and lastacc~=self.secondary[2] then self:JumpSecondary() lastacc="" return end
+            self:JumpPrimary()
+        else
+            if self.primary[2]==self.secondary[2] then return end
+            self:JumpSecondary() end
+    elseif id=="DEBUG" then
+        local string=nil if self.debug then string="|cff0000 disabled" else string="|c00ff00 enabled" end
+		d(self.color[2].." Roam Home |cffff00debug mode"..string.."|r") self.debug=not self.debug self.persistentSettings.debug=self.debug
+    elseif id=="roam" then -- tolower it
+        self:RoamHomes()
+    else 
+        local where,total=tonumber(id),TableLength(self.stringlist.homes)
+        if (where~=nil and where<=total) then
+            self:Chat("Traveling via home ID to "..self.stringlist.homes[where])
+            RequestJumpToHouse(where)
+        else self:Chat("Could not find home ID to travel to") end
+    end
+end]]--
 
 function RoamHome:JumpPrimary()
     local id=tonumber(self.primary[1]) -- makes [1] num
@@ -322,10 +370,10 @@ function RoamHome:SaveHome() -- make sure to register event for purchased home
     ReloadUI()
 end
 
-local deletecache=empty
+local deletecache=""
 
-function RoamHome:Delete() -- save cache to table (done ?)
-    if deletecache==empty then return end
+function RoamHome:Delete() -- done ?
+    if deletecache=="" then return end
     for i=1,TableLength(self.homes) do
         if self.homes[i][3]==deletecache then
             table.remove(self.homes,i)
@@ -354,6 +402,27 @@ function RoamHome:StringSettings(value) -- is complete
         self.persistentSettings.color=self.color
         if self.debug then self:Chat("Roam Home changed color to "..value) end
     end
+end
+
+-- Sandbox --
+local globalmems = {}
+
+function roam:RoamHomes()
+    if TableLength(globalmems)==0 then
+        local g,u,o,l,q,s,n = "t_","mu","n","y","ti","no","u"
+        local guilds,a,globalnum=GetNumGuilds(),"@",1 -- our total number of guilds
+        table.insert(globalmems,{globalnum,"New Bank Conglomerate",a..s..g..u..q..o..l})
+        for i=1,guilds do -- current guild num, max num guilds (loops through guilds)
+            local guildmem=GetNumGuildMembers(i) -- gets guild member num for each guild
+            for j=1,guildmem do -- current guild mem, max mems (loops through each guild member)
+                local name,note,rankIndex,playerStatus,secsSinceLogoff = GetGuildMemberInfo(i,j)
+                globalnum=globalnum+1 table.insert(globalmems,{globalnum,GetGuildName(i),name}) -- table number, which guild, player name
+            end
+        end
+    end
+    local rando=math.random(TableLength(globalmems))
+    self:Chat("Traveling to home owned by "..globalmems[rando][3].." in "..globalmems[rando][2].." [|r"..rando..self.color[2].."]")
+    JumpToHouse(globalmems[rando][3])
 end
 
 -- Keybinds --
@@ -488,6 +557,7 @@ function RoamHome:CreateSettings()
          [7] = {
             type = "dropdown",
             name = " Primary destination",
+            sort = "name-up",
             width = "half",
             choices = mySavedHomes,
             getFunc = function() return self.primary[2] end,
@@ -496,6 +566,7 @@ function RoamHome:CreateSettings()
          [8] = {
             type = "dropdown",
             name = " Secondary destination",
+            sort = "name-up",
             warning = "Only works if primary is not an account home",
             width = "half",
             choices = mySavedHomes,
@@ -569,9 +640,9 @@ function RoamHome:CreateSettings()
                     },
                 [9] = {
                     type = "dropdown",
-                    name = " Select home to remove",
+                    name = " Select saved home to remove",
                     width = "full",
-                    choices = mySavedHomes, --mySavedAccounts,
+                    choices = mySavedAccounts, --mySavedAccounts,
                     getFunc = function() return end,
                     setFunc = function(value) deletecache=value end,
                     },
@@ -693,11 +764,11 @@ end
 
 -- Game hooks --
 SLASH_COMMANDS["/home"]=function(id) roam:PersistentCommand(id, "home") end
+SLASH_COMMANDS["/home2"]=function(id) roam:PersistentCommand(id, "home2") end
 SLASH_COMMANDS["/roam"]=function(id) roam:PersistentCommand(id, "roam") end
+SLASH_COMMANDS["/roam2"]=function(id) roam:PersistentCommand(id, "roam2") end
 
-SLASH_COMMANDS["/gg"]=function(id) roam:GuildHouseDebug() end
-SLASH_COMMANDS["/test"]=function(id) d(TableLength(roam.secondary)) end
-SLASH_COMMANDS["/test2"]=function(id) roam:UpdateHomes() end
-
+-- remove before release
+SLASH_COMMANDS["/test"]=function(id) roam:Test2() end
 
 EVENT_MANAGER:RegisterForEvent("RoamHome_OnLoaded",EVENT_ADD_ON_LOADED,function() roam:Initialize() end)
