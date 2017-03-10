@@ -1,6 +1,7 @@
 -- Global table --
 RoamHome={
     ver="1.7 beta",
+    patch=nil, -- fixes update to 1.7
     debug=nil, -- makes mutinys life easier
     string=nil, -- shows strings globally
     primary={}, -- primary home id for us
@@ -10,6 +11,7 @@ RoamHome={
     color={}, -- string color,hex
     slash="", -- /home or /roam
     defaultPersistentSettings={
+        patch=false,
         debug=true, -- should be false besides dev builds
         string=true,
         primary={},
@@ -91,12 +93,13 @@ local empty = "nil"
 
 -- Initialize --
 function RoamHome:Initialize()
-	self.persistentSettings=ZO_SavedVars:NewAccountWide("RoamHomeVars",1.6999993,nil,self.defaultPersistentSettings)
+	self.persistentSettings=ZO_SavedVars:NewAccountWide("RoamHomeVars",80085,nil,self.defaultPersistentSettings)
+    self.homes=self.persistentSettings.homes
+    self:PatchUpdate()  -- fixes 1.6.1 > 1.7 update
     self.debug=self.persistentSettings.debug
     self.string=self.persistentSettings.string
     self.primary=self.persistentSettings.primary
     self.secondary=self.persistentSettings.secondary
-    self.homes=self.persistentSettings.homes
     self.binds=self.persistentSettings.binds
     self.color=self.persistentSettings.color
     self.slash=self.persistentSettings.slash
@@ -155,7 +158,7 @@ local function GetSavedAccounts() -- so people cant delete their owned homes
 end
 
 -- Debug --
-function roam:DebugPrintHouses() -- makes mutinys life a little less bad
+function roam:DebugPrintHouses() -- makes mutinys life a little more okay
     for i=1,TableLength(roam.homes) do
         d("Slot "..i..": ["..tostring(roam.homes[i][1]).."] ["..tostring(roam.homes[i][2]).."] ["..tostring(roam.homes[i][3]).."]")
     end
@@ -163,6 +166,28 @@ end
 
 function roam:DebugPrintDestinations()
     d("Destinations: "..tostring(self.primary[2]).." ["..tostring(self.primary[1]).."] || "..tostring(self.secondary[2]).." ["..tostring(self.secondary[1]).."]")
+end
+
+function roam:PatchUpdate() -- patches 1.6.1 > 1.7 update
+    if type(self.persistentSettings.primary)~="table" or type(self.persistentSettings.secondary)~="table"then
+        local primary,secondary=self.persistentSettings.primestring,self.persistentSettings.secondstring
+        self.persistentSettings.primary={}
+        self.persistentSettings.secondary={}
+        for i=1,TableLength(self.homes) do
+            if self.homes[i][1]==nil then self.homes[i][1]=empty end
+            if self.homes[i][2]==nil then self.homes[i][2]=empty end
+            if self.homes[i][3]==primary then 
+                if self.homes[i][1]~=empty then self.primary[1]=self.homes[i][1] else self.primary[1]=self.homes[i][2] end
+                self.primary[2]=self.homes[i][3]
+                self.persistentSettings.primary=self.primary end
+            if self.homes[i][3]==secondary then
+                if self.homes[i][1]~=empty then self.secondary[1]=self.homes[i][1] else self.secondary[1]=self.homes[i][2] end
+                self.secondary[2]=self.homes[i][3]
+                self.persistentSettings.secondary=self.secondary
+            end
+        end
+        self:Chat("Roam Home successfully updated savevars to version 1.7")
+    end
 end
 
 -- Addon --
@@ -199,28 +224,6 @@ function RoamHome:FindHomes() -- who do I look like someone who MANUALLY adds th
     if self.debug then self:DebugPrintHouses() self:DebugPrintDestinations()end -- makes mutinys life easier toggle with DEBUG
 end
 
-function RoamHome:SelectHome(value,id) -- done ?
-    if (id=="primary" or id=="secondary") then
-        for i=1,TableLength(self.homes) do
-            if self.homes[i][3]==value then
-                if id=="primary" then
-                    if self.homes[i][1]==empty then self.primary[1]=self.homes[i][2]
-                    else self.primary[1]=self.homes[i][1] end
-                    self.primary[2]=self.homes[i][3]
-                    self.persistentSettings.primary=self.primary 
-                    if self.debug then d("Roam Home set primary to ["..tostring(self.homes[i][1]).."] ["..tostring(self.homes[i][2]).."] ["..tostring(self.homes[i][3]).."]") end
-                elseif id=="secondary" then
-                    if self.homes[i][1]==empty then self.secondary[1]=self.homes[i][2]
-                    else self.secondary[1]=self.homes[i][1] end
-                    self.secondary[2]=self.homes[i][3]
-                    self.persistentSettings.secondary=self.secondary
-                    if self.debug then d("Roam Home set secondary to ["..tostring(self.homes[i][1]).."] ["..tostring(self.homes[i][2]).."] ["..tostring(self.homes[i][3]).."]") end
-                end
-            end
-        end
-    end
-end
-
 -- Jump Home --
 function RoamHome:PersistentCommand(id, who) -- done
     if who=="roam" and self.slash=="/roam" then
@@ -236,23 +239,22 @@ end
 
 local lastacc=""
 
-function roam:JumpHome(id)
-    if id=="" then -- KEYBIND OR /HOME --
+function roam:JumpHome(id) -- master jump function
+    if id=="" then -- keybind or /home
         local where=GetCurrentZoneHouseId()
-        if tonumber(self.primary[1])~=nil then -- primary is your home
+        if tonumber(self.primary[1])~=nil then -- if self.primary is your home
             if where~=self.primary[1] then self:JumpPrimary()
             elseif self.primary[1]~=self.secondary[1] then self:JumpSecondary() end
-        else -- primary is someone elses home 
+        else -- if self.primary is someone elses home 
             if lastacc=="" then self:JumpPrimary() lastacc=self.primary[1]
             else self:JumpSecondary() lastacc="" end
         end
-    -- END JUMP FUNCTION ROUTING --
-    elseif id=="DEBUG" then -- DEBUG --
+    elseif id=="DEBUG" then -- DEBUG
         local string=nil if self.debug then string="|cff0000 disabled" else string="|c00ff00 enabled" end
 		d(self.color[2].." Roam Home |cffff00debug mode"..string.."|r") self.debug=not self.debug self.persistentSettings.debug=self.debug
-    elseif id=="roam" then -- note to self tolower this
+    elseif id=="roam" then -- note to self lower this w :lower()
         self:RoamHomes()
-    else -- MANUAL JUMP --
+    else -- manual jump
         local where,total=tonumber(id),TableLength(self.stringlist.homes)
         if (where~=nil and where<=total) then
             self:Chat("Traveling via home ID to "..self.stringlist.homes[where])
@@ -264,11 +266,11 @@ function roam:JumpHome(id)
     end
 end   
                         
-function RoamHome:JumpPrimary()
+function RoamHome:JumpPrimary() -- recieved from jumphome()
     local id=tonumber(self.primary[1]) -- makes [1] num
     for i=1,TableLength(self.homes) do -- scans saved homes
     if self.homes[i][3]==self.primary[2] then -- loads all table data      
-        if self.homes[i][2]==self.homes[i][3] then self:Chat("Traveling to primary home owned by "..self.homes[i][2]) lastacc=self.homes[i][2]
+        if self.homes[i][2]==self.homes[i][3] then self:Chat("Traveling to primary home owned by "..self.homes[i][2])
         else self:Chat("Traveling to primary home "..self.homes[i][3]) end
         if id~=nil then RequestJumpToHouse(self.homes[i][1])
         else JumpToHouse(self.homes[i][2]) end
@@ -279,12 +281,35 @@ end
 function RoamHome:JumpSecondary()
     local id=tonumber(self.secondary[1])
     for i=1,TableLength(self.homes) do
-    if self.homes[i][3]==self.secondary[2] then -- loads all table data      
+    if self.homes[i][3]==self.secondary[2] then   
         if self.homes[i][2]==self.homes[i][3] then self:Chat("Traveling to secondary home owned by "..self.homes[i][2])
         else self:Chat("Traveling to secondary home "..self.homes[i][3]) end
         if id~=nil then RequestJumpToHouse(self.homes[i][1])
         else JumpToHouse(self.homes[i][2]) end
         return end
+    end
+end
+
+-- Settings functions --
+function RoamHome:SelectHome(value,id) -- done ?
+    if (id=="primary" or id=="secondary") then
+        for i=1,TableLength(self.homes) do
+            if self.homes[i][3]==value then
+                if id=="primary" then
+                    if self.homes[i][1]==empty then self.primary[1]=self.homes[i][2]
+                    else self.primary[1]=self.homes[i][1] end
+                    self.primary[2]=self.homes[i][3]
+                    self.persistentSettings.primary=self.primary 
+                    if self.debug then d("Roam Home set primary to ["..tostring(self.primary[1]).."] ["..tostring(self.primary[2]).."] | | ["..tostring(self.homes[i][1]).."] ["..tostring(self.homes[i][2]).."] ["..tostring(self.homes[i][3]).."]") end
+                elseif id=="secondary" then
+                    if self.homes[i][1]==empty then self.secondary[1]=self.homes[i][2]
+                    else self.secondary[1]=self.homes[i][1] end
+                    self.secondary[2]=self.homes[i][3]
+                    self.persistentSettings.secondary=self.secondary
+                    if self.debug then d("Roam Home set secondary to ["..tostring(self.secondary[1]).."] ["..tostring(self.secondary[2]).."] | | ["..tostring(self.homes[i][1]).."] ["..tostring(self.homes[i][2]).."] ["..tostring(self.homes[i][3]).."]") end
+                end
+            end
+        end
     end
 end
 
@@ -454,7 +479,7 @@ function RoamHome:CreateSettings()
     }
     local optionsData = {
         [1] = {
-            type = "header", -- DISPLAY SETTINGS
+            type = "header",
             name = self.color[2].."Display|r settings",
             width = "full",
             },
@@ -474,7 +499,7 @@ function RoamHome:CreateSettings()
             setFunc = function(value) self:StringSettings(value) end,
             },
          [4] = {
-            type = "header", -- START HOME SETTINGS --
+            type = "header",
             name = self.color[2].."Home|r settings",
             width = "full",
             },
@@ -510,7 +535,7 @@ function RoamHome:CreateSettings()
             setFunc = function(value) self:SelectHome(value, "secondary") end,
             },
          [9] = {
-            type = "header", -- START HOME SETTINGS --
+            type = "header",
             name = self.color[2].."Roam|r settings (in alpha)",
             width = "full",
             },
@@ -523,7 +548,7 @@ function RoamHome:CreateSettings()
             type = "submenu",
             name = "Edit homes",
             width = "full",
-            controls= { -- START FRIEND SETTINGS --
+            controls= {
                [1] = {
                     type = "header",
                     name = " "..self.color[2].."Save Account",
@@ -570,7 +595,7 @@ function RoamHome:CreateSettings()
                     func = function() self:SaveHome() end,
                     },
                [8] = {
-                    type = "header", -- START PERSONALS --
+                    type = "header",
                     name = " "..self.color[2].."Remove Home",
                     width = "full",           
                     },
@@ -578,7 +603,7 @@ function RoamHome:CreateSettings()
                     type = "dropdown",
                     name = " Select saved home to remove",
                     width = "full",
-                    choices = mySavedAccounts, --mySavedAccounts,
+                    choices = mySavedAccounts,
                     getFunc = function() return end,
                     setFunc = function(value) deletecache=value end,
                     },
@@ -703,8 +728,5 @@ SLASH_COMMANDS["/home"]=function(id) roam:PersistentCommand(id, "home") end
 SLASH_COMMANDS["/home2"]=function(id) roam:PersistentCommand(id, "home2") end
 SLASH_COMMANDS["/roam"]=function(id) roam:PersistentCommand(id, "roam") end
 SLASH_COMMANDS["/roam2"]=function(id) roam:PersistentCommand(id, "roam2") end
-
--- remove before release
-SLASH_COMMANDS["/test"]=function(id) roam:Test2() end
 
 EVENT_MANAGER:RegisterForEvent("RoamHome_OnLoaded",EVENT_ADD_ON_LOADED,function() roam:Initialize() end)
