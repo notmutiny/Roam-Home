@@ -93,11 +93,11 @@ local empty = "nil"
 
 -- Initialize --
 function RoamHome:Initialize()
-	self.persistentSettings=ZO_SavedVars:NewAccountWide("RoamHomeVars",80085,nil,self.defaultPersistentSettings)
+	self.persistentSettings=ZO_SavedVars:NewAccountWide("RoamHomeVars",1.41,nil,self.defaultPersistentSettings)
     self.homes=self.persistentSettings.homes
     self:PatchUpdate()  -- fixes 1.6.1 > 1.7 update
-    self.debug=self.persistentSettings.debug
     self.string=self.persistentSettings.string
+    self.debug=self.persistentSettings.debug
     self.primary=self.persistentSettings.primary
     self.secondary=self.persistentSettings.secondary
     self.binds=self.persistentSettings.binds
@@ -169,7 +169,7 @@ function roam:DebugPrintDestinations()
 end
 
 function roam:PatchUpdate() -- patches 1.6.1 > 1.7 update
-    if type(self.persistentSettings.primary)~="table" or type(self.persistentSettings.secondary)~="table"then
+    if type(self.persistentSettings.primary)~="table" or type(self.persistentSettings.secondary)~="table" then
         local primary,secondary=self.persistentSettings.primestring,self.persistentSettings.secondstring
         self.persistentSettings.primary={}
         self.persistentSettings.secondary={}
@@ -186,7 +186,7 @@ function roam:PatchUpdate() -- patches 1.6.1 > 1.7 update
                 self.persistentSettings.secondary=self.secondary
             end
         end
-        self:Chat("Roam Home successfully updated savevars to version 1.7")
+        d("Roam Home converted savedvars to version "..self.ver..". This will not show again.")
     end
 end
 
